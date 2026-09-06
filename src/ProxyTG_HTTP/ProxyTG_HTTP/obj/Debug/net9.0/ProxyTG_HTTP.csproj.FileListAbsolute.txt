@@ -1,0 +1,5 @@
+C:\пргаграмерование\ProxyTG_HTTP\ProxyTG_HTTP\obj\Debug\net9.0\ProxyTG_HTTP.csproj.AssemblyReference.cache
+C:\пргаграмерование\ProxyTG_HTTP\ProxyTG_HTTP\obj\Debug\net9.0\ProxyTG_HTTP.GeneratedMSBuildEditorConfig.editorconfig
+C:\пргаграмерование\ProxyTG_HTTP\ProxyTG_HTTP\obj\Debug\net9.0\ProxyTG_HTTP.AssemblyInfoInputs.cache
+C:\пргаграмерование\ProxyTG_HTTP\ProxyTG_HTTP\obj\Debug\net9.0\ProxyTG_HTTP.AssemblyInfo.cs
+C:\пргаграмерование\ProxyTG_HTTP\ProxyTG_HTTP\obj\Debug\net9.0\ProxyTG_HTTP.csproj.CoreCompileInputs.cache

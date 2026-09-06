@@ -1,0 +1,14 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ProxyTG_HTTP.ModelData
+{
+    public struct LogModel
+    {
+        public string LogText { get; set; }
+        public string LogDate { get; set; }
+    }
+}

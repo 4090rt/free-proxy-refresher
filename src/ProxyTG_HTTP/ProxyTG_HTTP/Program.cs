@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ProxyTG_HTTP.DataBase.CreateTable;
 using ProxyTG_HTTP.HTTP.HTTPClientSettings;
 using ProxyTG_HTTP.ModelData;
 using System.Text.Json;
@@ -32,6 +33,8 @@ class Program
         var client1 = serviceProvider.GetRequiredService<Client_GIT_MTProto>();
         var client2 = serviceProvider.GetRequiredService<Client_GIT_HTTP>();
         var client3 = serviceProvider.GetRequiredService<Client_ALL>();
+
+        servise.AddScoped<TableForLog>();
     }
 
     private static LogLevel ParseLogLevel(string level)
