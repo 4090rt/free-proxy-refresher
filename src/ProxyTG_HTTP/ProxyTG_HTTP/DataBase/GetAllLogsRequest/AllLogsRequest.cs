@@ -25,7 +25,7 @@ namespace ProxyTG_HTTP.DataBase.GetAllLogsRequest
             _poolSQLite = poolSQLite;
         }
 
-        public async Task<List<LogModel>> AllLogs(LogModel logmodel)
+        public async Task<List<LogModel>> AllLogs()
         {
             SQLiteConnection connection = null;
             List<LogModel> listLogs = new List<LogModel>();
@@ -46,12 +46,12 @@ namespace ProxyTG_HTTP.DataBase.GetAllLogsRequest
 
                             while (await result.ReadAsync().ConfigureAwait(false))
                             {
-                                new LogModel
+                                var data = new LogModel()
                                 {
                                     LogText = result.IsDBNull(log) ? string.Empty : log.ToString(),
                                     LogDate = result.IsDBNull(date) ? string.Empty : date.ToString()
                                 };
-                                listLogs.Add(logmodel);
+                                listLogs.Add(data);
                             }
                             return listLogs;
                         }

@@ -42,9 +42,10 @@ namespace ProxyTG_HTTP.DataBase.CreateTable
             try
             {
                 connection = _poolSQLite.ConnectionOpen();
+
                 string command = "CREATE TABLE IF NOT EXISTS LogBase(" +
-                    "LogText, TEXT NOT NULL" +
-                    "Date TEXT NOT NULL,";
+                    "Log Text TEXT NOT NULL," +
+                    "Date TEXT NOT NULL)";
 
                 await using (SQLiteCommand sQLiteCommand = new SQLiteCommand(command, connection))
                 { 
