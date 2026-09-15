@@ -47,6 +47,7 @@ namespace ProxyTG_HTTP.DataBase.AddLog
 
                     await sQLiteCommand.ExecuteNonQueryAsync().ConfigureAwait(false);
                     await sQLiteTransaction.CommitAsync().ConfigureAwait(false);
+
                     return true;
                 }
             }
@@ -115,13 +116,13 @@ namespace ProxyTG_HTTP.DataBase.AddLog
             }
             finally
             {
-                if (connection != null)
-                {
-                    connection.Dispose();
-                }
                 if (sQLiteTransaction != null)
                 {
                     sQLiteTransaction.Dispose();
+                }
+                if (connection != null)
+                {
+                    _poolSQLite.ConnectionClose(connection);
                 }
             }
         }

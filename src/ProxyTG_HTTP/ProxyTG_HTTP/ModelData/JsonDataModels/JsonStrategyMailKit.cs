@@ -9,5 +9,8 @@ namespace ProxyTG_HTTP.ModelData.JsonDataModels
     public struct JsonStrategyMailKit
     {
         public string Strategy { get; set; }
+        public string Mail { get; set; }
+        public string Password { get; set; }
+        public string recipientsemail { get; set; }
     }
 }

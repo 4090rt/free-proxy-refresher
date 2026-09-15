@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using ProxyTG_HTTP.DataBase.DbPath;
+using ProxyTG_HTTP.DataBase.LogSaveClass;
 using ProxyTG_HTTP.DataBase.PoolSQLiteConnection;
 using ProxyTG_HTTP.ExceptionBase;
 using System;
@@ -16,13 +17,15 @@ namespace ProxyTG_HTTP.DataBase.CreateTable
         private readonly ILogger<TableForLog> _logger;
         private readonly PoolSQLite _poolSQLite;
         private readonly DBPathCLass _dbpath;
+        private readonly LogSave _logSave;
         private bool _ischeked = false;
 
-        public TableForLog(ILogger<TableForLog> logger, PoolSQLite poolSQLite, DBPathCLass dbpath)
+        public TableForLog(ILogger<TableForLog> logger, PoolSQLite poolSQLite, DBPathCLass dbpath, LogSave logSave)
         {
             _logger = logger;
             _poolSQLite = poolSQLite;
             _dbpath = dbpath;
+            _logSave = logSave;
         }
 
         public async Task InithializateCreateTable()
@@ -50,8 +53,15 @@ namespace ProxyTG_HTTP.DataBase.CreateTable
                 await using (SQLiteCommand sQLiteCommand = new SQLiteCommand(command, connection))
                 { 
                     int result = await sQLiteCommand.ExecuteNonQueryAsync().ConfigureAwait(false);
-                    bool exec = Convert.ToInt32(result) == 1;
-                    return exec;    
+                    bool exec = result >= 0;
+
+                    if (exec)
+                    {
+                        _logger.LogInformation("Локальная база данных инициализирована: таблица LogBase создана");
+                        await _logSave.SaveLog("Локальная база данных инициализирована: таблица LogBase создана", DateTime.UtcNow.ToString());
+                    }
+
+                    return exec;
                 }
             }
             catch (SQLiteException ex)

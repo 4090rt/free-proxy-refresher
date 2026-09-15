@@ -1,11 +1,13 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly;
+using ProxyTG_HTTP.ModelData.JsonDataModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
@@ -23,7 +25,10 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                 client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
                 client.DefaultRequestHeaders.AcceptEncoding.ParseAdd("zip, deflate, br");
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-                client.BaseAddress = new Uri("https://raw.githubusercontent.com/proxmint/free-proxy-list/main/proxies/socks5.txt");
+
+                var urlValue = File.ReadAllText("appsettings.json");
+                var result = JsonSerializer.Deserialize<JsonDatStruct>(urlValue).Logging.ProxySources;
+                client.BaseAddress = new Uri(result.HTTP);
 
                 client.DefaultRequestVersion = HttpVersion.Version20;
                 client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;

@@ -3,18 +3,19 @@ using Microsoft.Extensions.Logging;
 using MimeKit;
 using ProxyTG_HTTP.ExceptionBase;
 using ProxyTG_HTTP.ModelData;
+using ProxyTG_HTTP.ModelData.JsonDataModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ProxyTG_HTTP.MailKit
 {
     public class MailKitClient
     {
-        private readonly string _EMailTO;
         private readonly ILogger<MailKitClient> _logger;
 
         public MailKitClient(ILogger<MailKitClient> logger)
@@ -29,13 +30,17 @@ namespace ProxyTG_HTTP.MailKit
                 string smtpHost = "smtp.gmail.com";
                 int port = 587;
 
-                string username = "";
-                string password = "";
+                var json = File.ReadAllText("appsettings.json");
+                var persejson = JsonSerializer.Deserialize<JsonDatStruct>(json);
+;
+
+                string username = persejson.Logging.StrategyMailKit.Mail;
+                string password = persejson.Logging.StrategyMailKit.Password;
 
                 var message = new MimeMessage();
 
                 message.From.Add(new MailboxAddress("LogProxy", username));
-                message.To.Add(MailboxAddress.Parse(_EMailTO));
+                message.To.Add(MailboxAddress.Parse(persejson.Logging.StrategyMailKit.recipientsemail));
                 message.Subject = "Logs";
 
                 var html = "<table border='1'><tr><th>Log</th><th>Date</th><tr>";
@@ -51,7 +56,6 @@ namespace ProxyTG_HTTP.MailKit
                 {
                     Text = html
                 };
-
                 using (var client = new global::MailKit.Net.Smtp.SmtpClient())
                 {
                     try

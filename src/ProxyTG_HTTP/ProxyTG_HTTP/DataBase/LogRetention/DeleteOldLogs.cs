@@ -18,12 +18,14 @@ namespace ProxyTG_HTTP.DataBase.LogRetention
         private readonly ILogger<DeleteOldLogs> _logger;
         private readonly PoolSQLite _poolSQLite;
         private readonly DBPathCLass _dbPathCLass;
+        private readonly LogSave _logSave;
 
-       public DeleteOldLogs(ILogger<DeleteOldLogs> logger, PoolSQLite poolSQLite, DBPathCLass dbPathCLass)
+        public DeleteOldLogs(ILogger<DeleteOldLogs> logger, PoolSQLite poolSQLite, DBPathCLass dbPathCLass, LogSave logSave)
         {
             _logger = logger;
             _dbPathCLass = dbPathCLass;
             _poolSQLite = poolSQLite;
+            _logSave = logSave;
         }
 
         public async Task<bool> LogsDeleteMethod(int day)
@@ -38,14 +40,19 @@ namespace ProxyTG_HTTP.DataBase.LogRetention
                 var cutoffDate = DateTime.UtcNow.AddDays(-day).ToString("yyyy-MM-dd HH:mm:ss");
                 string comand = "DELETE FROM LogBase WHERE Date < @cutoffDate";
 
+                int result;
                 await using (SQLiteCommand command = new SQLiteCommand(comand, connection, sQLiteTransaction))
                 {
                     command.Parameters.AddWithValue("@cutoffDate", cutoffDate);
-
-                    int result = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-                    bool exec = Convert.ToInt32(result) == 1;
-                    return exec;
+                    result = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }
+
+                await sQLiteTransaction.CommitAsync().ConfigureAwait(false);
+
+                _logger.LogInformation($"Очистка логов старше {day} дн.: удалено {result} записей");
+                await _logSave.SaveLog($"Очистка логов старше {day} дн.: удалено {result} записей", DateTime.UtcNow.ToString());
+
+                return result >= 0;
             }
             catch (SQLiteException ex)
             {

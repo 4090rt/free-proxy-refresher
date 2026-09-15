@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using ProxyTG_HTTP.DataBase.DbPath;
+using ProxyTG_HTTP.DataBase.LogSaveClass;
 using ProxyTG_HTTP.DataBase.PoolSQLiteConnection;
 using ProxyTG_HTTP.ExceptionBase;
 using ProxyTG_HTTP.ModelData;
@@ -17,12 +18,14 @@ namespace ProxyTG_HTTP.DataBase.GetAllLogsRequest
         private readonly ILogger<AllLogsRequest> _logger;
         private readonly PoolSQLite _poolSQLite;
         private readonly DBPathCLass _dbpath;
+        private readonly LogSave _logSave;
 
-        public AllLogsRequest(ILogger<AllLogsRequest> logger, PoolSQLite poolSQLite, DBPathCLass dBPathCLass)
+        public AllLogsRequest(ILogger<AllLogsRequest> logger, PoolSQLite poolSQLite, DBPathCLass dBPathCLass, LogSave logSave)
         {
             _logger = logger;
             _dbpath = dBPathCLass;
             _poolSQLite = poolSQLite;
+            _logSave = logSave;
         }
 
         public async Task<List<LogModel>> AllLogs()
@@ -41,18 +44,23 @@ namespace ProxyTG_HTTP.DataBase.GetAllLogsRequest
                     {
                         if (result != null)
                         {
-                            var log = result.GetOrdinal("LogText");
+                            var log = result.GetOrdinal("Log");
                             var date = result.GetOrdinal("Date");
 
                             while (await result.ReadAsync().ConfigureAwait(false))
                             {
                                 var data = new LogModel()
                                 {
-                                    LogText = result.IsDBNull(log) ? string.Empty : log.ToString(),
-                                    LogDate = result.IsDBNull(date) ? string.Empty : date.ToString()
+                                    LogText = result.IsDBNull(log) ? string.Empty : result.GetString(log),
+                                    LogDate = result.IsDBNull(date) ? string.Empty : result.GetString(date)
                                 };
                                 listLogs.Add(data);
                             }
+
+                            _logger.LogInformation($"Выгружено записей из БД: {listLogs.Count}");
+                            await _logSave.SaveLog($"Выгружено записей из БД: {listLogs.Count}", DateTime.UtcNow.ToString());
+
+                            _poolSQLite.ConnectionClose(connection);
                             return listLogs;
                         }
                         else
@@ -79,7 +87,8 @@ namespace ProxyTG_HTTP.DataBase.GetAllLogsRequest
             {
                 if (connection != null)
                 {
-                    connection.Dispose();
+                    try { _poolSQLite.ConnectionClose(connection); }
+                    catch { }
                 }
             }
         }

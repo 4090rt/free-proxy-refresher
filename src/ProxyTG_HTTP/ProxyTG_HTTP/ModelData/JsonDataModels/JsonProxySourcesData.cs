@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace ProxyTG_HTTP.ModelData.JsonDataModels
 {
-    public struct JsonDatStruct
+    public struct JsonProxySourcesData
     {
-        public JsonLoggingData Logging { get; set; }
+        public string MTProto { get; set; }
+        public string HTTP { get; set; }
     }
 }

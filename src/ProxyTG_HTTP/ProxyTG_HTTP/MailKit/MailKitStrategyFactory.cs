@@ -44,12 +44,13 @@ namespace ProxyTG_HTTP.MailKit
 
     public static class FactoryClass
     {
-        public  static MailKitStrategyFactory MethodFactory(string strategy, MailKitClient mailKitClient, MailKitClientYandex mailKitClientYande)
+        public static MailKitStrategyFactory MethodFactory(string strategy, MailKitClient mailKitClient, MailKitClientYandex mailKitClientYande)
         {
-            return strategy.ToLower() switch
+            return strategy?.ToLower() switch
             {
                 "google" => new StrategyGoogle(mailKitClient),
-                "yandex" => new StrategyYandex(mailKitClientYande)
+                "yandex" => new StrategyYandex(mailKitClientYande),
+                _ => throw new InvalidOperationException($"Неверная стратегия отправки почты: {strategy}")
             };
         }
     }

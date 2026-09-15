@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProxyTG_HTTP.ModelData.ParseData;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
 {
     public interface HttpGetPRoxysFabric
     {
-        public Task HttpClients(string client);
+        public Task<List<ProxyData>> HttpClients();
     }
 
     public class HttpClient_Git_MTProto : HttpGetPRoxysFabric
@@ -17,13 +18,14 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
 
         public HttpClient_Git_MTProto(RequestMTProto requestMTProto) => _requestMTProto = requestMTProto;
 
-        public async Task HttpClients(string client)
+        public async Task<List<ProxyData>> HttpClients()
         {
-            client = "Client_GIT_MTProto";
+            var client = "Client_GIT_MTProto";
 
             StrategyClass strategyClass = new StrategyClass(_requestMTProto);
-            await strategyClass.MainMethod(client).ConfigureAwait(false);
+            List<ProxyData> list = await strategyClass.MainMethod(client).ConfigureAwait(false);
 
+            return list;
         }
     }
 
@@ -33,13 +35,14 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
 
         public HttpClient_Git_Http(RequestHttp requestMTProto) => _requestHttp = requestMTProto;
 
-        public async Task HttpClients(string client)
+        public async Task<List<ProxyData>> HttpClients()
         {
-            client = "Client_GIT_HTTP";
+            var client = "Client_GIT_HTTP";
 
             StrategyClass strategyClass = new StrategyClass(_requestHttp);
-            await strategyClass.MainMethod(client).ConfigureAwait(false);
+            List<ProxyData>  list = await strategyClass.MainMethod(client).ConfigureAwait(false);
 
+            return list;
         }
     }
 
@@ -58,8 +61,8 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
         {
             return type_client.ToLower() switch
             {
-                "MTProto" => new HttpClient_Git_MTProto(_requestMTProto),
-                "Http" => new HttpClient_Git_Http(_requestHttp)
+                "mtproto" => new HttpClient_Git_MTProto(_requestMTProto),
+                "http" => new HttpClient_Git_Http(_requestHttp)
             };
         }
     }

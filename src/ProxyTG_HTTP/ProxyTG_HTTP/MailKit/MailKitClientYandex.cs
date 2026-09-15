@@ -2,17 +2,18 @@
 using MimeKit;
 using ProxyTG_HTTP.ExceptionBase;
 using ProxyTG_HTTP.ModelData;
+using ProxyTG_HTTP.ModelData.JsonDataModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ProxyTG_HTTP.MailKit
 {
     public class MailKitClientYandex
     {
-        private readonly string _YMailTO;
         private readonly ILogger<MailKitClientYandex> _logger;
 
         public MailKitClientYandex(ILogger<MailKitClientYandex> logger)
@@ -27,13 +28,16 @@ namespace ProxyTG_HTTP.MailKit
                 string smtpHost = "smtp.yandex.ru";
                 int port = 587;
 
-                string username = "";
-                string password = "";
+                var json = System.IO.File.ReadAllText("appsettings.json");
+                var persejson = JsonSerializer.Deserialize<JsonDatStruct>(json);
+
+                string username = persejson.Logging.StrategyMailKit.Mail;
+                string password = persejson.Logging.StrategyMailKit.Password;
 
                 var message = new MimeMessage();
 
                 message.From.Add(new MailboxAddress("LogProxy", username));
-                message.To.Add(MailboxAddress.Parse(_YMailTO));
+                message.To.Add(MailboxAddress.Parse(persejson.Logging.StrategyMailKit.recipientsemail));
                 message.Subject = "Logs";
 
                 var html = "<table border='1'><tr><th>Log</th><th>Date</th><tr>";

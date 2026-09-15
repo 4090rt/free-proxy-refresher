@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using ProxyTG_HTTP.DataBase.LogSaveClass;
 using ProxyTG_HTTP.ExceptionBase;
 using ProxyTG_HTTP.HTTP.HttpGet;
 using ProxyTG_HTTP.ModelData.ParseData;
@@ -21,8 +22,16 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
         public readonly GetProxys _getProxys;
         public readonly ParseMTProto _parseMTProto;
         public readonly ILogger<RequestMTProto> _logger;
-        public RequestMTProto(GetProxys getProxys, ParseMTProto parseMTProto, ILogger<RequestMTProto> logger) { _getProxys = getProxys; 
-            _parseMTProto = parseMTProto; _logger = logger;}
+        public readonly LogSave _logSave;
+
+        public RequestMTProto(GetProxys getProxys, ParseMTProto parseMTProto, ILogger<RequestMTProto> logger, LogSave logSave)
+        {
+            _getProxys = getProxys;
+            _parseMTProto = parseMTProto;
+            _logger = logger;
+            _logSave = logSave;
+        }
+
         public async Task<List<ProxyData>> RequestInProxys(string client)
         {
             try
@@ -36,6 +45,9 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
             
                 if (mtProtoParses.Count == 0)
                     return new List<ProxyData>();
+
+                _logger.LogInformation($"Распознано MTProto прокси: {mtProtoParses.Count}");
+                await _logSave.SaveLog($"Распознано MTProto прокси: {mtProtoParses.Count}", DateTime.UtcNow.ToString());
 
                 return mtProtoParses;
             }
@@ -52,8 +64,16 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
         public readonly GetProxys _getProxys;
         public readonly ParseHttp _parseHttp;
         public readonly ILogger<RequestHttp> _logger;
-        public RequestHttp(GetProxys getProxys, ParseHttp parseHttp, ILogger<RequestHttp> logger) { _getProxys = getProxys;
-            _parseHttp = parseHttp; _logger = logger;}
+        public readonly LogSave _logSave;
+
+        public RequestHttp(GetProxys getProxys, ParseHttp parseHttp, ILogger<RequestHttp> logger, LogSave logSave)
+        {
+            _getProxys = getProxys;
+            _parseHttp = parseHttp;
+            _logger = logger;
+            _logSave = logSave;
+        }
+
         public async Task<List<ProxyData>> RequestInProxys(string client)
         {
             try
@@ -68,8 +88,10 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
                 if (parseHttps.Count == 0)
                     return new List<ProxyData>();
 
-                return parseHttps;
+                _logger.LogInformation($"Распознано HTTP прокси: {parseHttps.Count}");
+                await _logSave.SaveLog($"Распознано HTTP прокси: {parseHttps.Count}", DateTime.UtcNow.ToString());
 
+                return parseHttps;
             }
             catch (Exception ex)
             {
