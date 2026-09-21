@@ -19,7 +19,7 @@ namespace ProxyTG_HTTP.ExceptionBase
             }
             catch (Exception exx)
             {
-                throw new Exception("Исключение в ExceptionBase" + ex.Message);
+                throw new Exception("Исключение в ExceptionBase" + exx.Message);
             }
         }
     }

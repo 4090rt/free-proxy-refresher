@@ -3,11 +3,11 @@ using MimeKit;
 using ProxyTG_HTTP.ExceptionBase;
 using ProxyTG_HTTP.ModelData;
 using ProxyTG_HTTP.ModelData.JsonDataModels;
+using ProxyTG_HTTP.ReadedJson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ProxyTG_HTTP.MailKit
@@ -21,15 +21,14 @@ namespace ProxyTG_HTTP.MailKit
             _logger = logger;
         }
 
-        public async Task SendMail(List<LogModel> logModels)
+        public async Task SendMail(List<LogModel> logModels, string? attachmentPath = null)
         {
             try
             {
                 string smtpHost = "smtp.yandex.ru";
                 int port = 587;
 
-                var json = System.IO.File.ReadAllText("appsettings.json");
-                var persejson = JsonSerializer.Deserialize<JsonDatStruct>(json);
+                var persejson = await ReadAndDeserializeJson.MethodJson<JsonDatStruct>().ConfigureAwait(false);
 
                 string username = persejson.Logging.StrategyMailKit.Mail;
                 string password = persejson.Logging.StrategyMailKit.Password;
@@ -49,10 +48,13 @@ namespace ProxyTG_HTTP.MailKit
 
                 html += "</table>";
 
-                var textpart = new TextPart
-                {
-                    Text = html
-                };
+                var builder = new BodyBuilder();
+                builder.HtmlBody = html;
+
+                if (!string.IsNullOrEmpty(attachmentPath) && File.Exists(attachmentPath))
+                    builder.Attachments.Add(attachmentPath);
+
+                message.Body = builder.ToMessageBody();
 
                 using (var client = new global::MailKit.Net.Smtp.SmtpClient())
                 {
@@ -62,9 +64,9 @@ namespace ProxyTG_HTTP.MailKit
 
                         await client.ConnectAsync(smtpHost, port, global::MailKit.Security.SecureSocketOptions.StartTls, cts.Token).ConfigureAwait(false);
 
-                        await client.AuthenticateAsync(username, password).ConfigureAwait(false);
+                        await client.AuthenticateAsync(username, password, cts.Token).ConfigureAwait(false);
 
-                        await client.SendAsync(message).ConfigureAwait(false);
+                        await client.SendAsync(message, cts.Token).ConfigureAwait(false);
 
                         await client.DisconnectAsync(false, cts.Token).ConfigureAwait(false);
                     }

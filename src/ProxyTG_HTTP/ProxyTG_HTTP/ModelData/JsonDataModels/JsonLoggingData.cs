@@ -13,5 +13,6 @@ namespace ProxyTG_HTTP.ModelData.JsonDataModels
         public JsonLogRetention LogReterningDay { get; set; }
         public JsonStrategyMailKit StrategyMailKit { get; set; }
         public JsonPingToServiceURLData PingToSerivceURL { get; set; }
+        public PDFilepath PDFilepath { get; set; }
     }
 }

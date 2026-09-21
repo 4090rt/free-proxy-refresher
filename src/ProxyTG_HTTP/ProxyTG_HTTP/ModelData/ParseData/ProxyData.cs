@@ -15,6 +15,7 @@ namespace ProxyTG_HTTP.ModelData.ParseData
     public struct ProxyData
     {
         public ProxyType Type { get; set; }
+        public string  IP { get; set; }
         public string Server { get; set; }
         public string Port { get; set; }
         public string? Secret { get; set; }

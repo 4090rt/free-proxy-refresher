@@ -3,12 +3,12 @@ using ProxyTG_HTTP.DataBase.LogSaveClass;
 using ProxyTG_HTTP.ExceptionBase;
 using ProxyTG_HTTP.ModelData.JsonDataModels;
 using ProxyTG_HTTP.ModelData.PingData;
+using ProxyTG_HTTP.ReadedJson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ProxyTG_HTTP.HTTP.PingRequest
@@ -47,8 +47,7 @@ namespace ProxyTG_HTTP.HTTP.PingRequest
 
                     var ping = timer.ElapsedMilliseconds / 2;
 
-                    var hosttext = System.IO.File.ReadAllText("appsettings.json");
-                    var hostgoogle = JsonSerializer.Deserialize<JsonDatStruct>(hosttext).Logging.PingToSerivceURL;
+                    var hostgoogle = (await ReadAndDeserializeJson.MethodJson<JsonDatStruct>().ConfigureAwait(false)).Logging.PingToSerivceURL;
 
                     _logger.LogInformation($"Пинг до Google: {ping} ms, статус {status}");
                     await _logSave.SaveLog($"Пинг до Google: {ping} ms, статус {status}", DateTime.UtcNow.ToString());
@@ -65,8 +64,9 @@ namespace ProxyTG_HTTP.HTTP.PingRequest
                 {
                     var status = response.StatusCode;
 
-                    var hosttext = System.IO.File.ReadAllText("appsettings.json");
-                    var hostgoogle = JsonSerializer.Deserialize<JsonDatStruct>(hosttext).Logging.PingToSerivceURL;
+                    var ping = timer.ElapsedMilliseconds / 2;
+
+                    var hostgoogle = (await ReadAndDeserializeJson.MethodJson<JsonDatStruct>().ConfigureAwait(false)).Logging.PingToSerivceURL;
 
                     _logger.LogWarning($"Пинг до Google: неуспешен, статус {status}");
                     await _logSave.SaveLog($"Пинг до Google: неуспешен, статус {status}", DateTime.UtcNow.ToString());

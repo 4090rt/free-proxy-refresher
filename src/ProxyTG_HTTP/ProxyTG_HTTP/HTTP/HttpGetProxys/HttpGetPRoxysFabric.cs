@@ -62,7 +62,8 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
             return type_client.ToLower() switch
             {
                 "mtproto" => new HttpClient_Git_MTProto(_requestMTProto),
-                "http" => new HttpClient_Git_Http(_requestHttp)
+                "http" => new HttpClient_Git_Http(_requestHttp),
+                _ => throw new ArgumentException($"Неизвестный тип прокси: {type_client}")
             };
         }
     }

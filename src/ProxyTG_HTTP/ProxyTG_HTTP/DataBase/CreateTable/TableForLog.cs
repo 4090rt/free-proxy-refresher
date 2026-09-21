@@ -83,7 +83,7 @@ namespace ProxyTG_HTTP.DataBase.CreateTable
             {
                 if (connection != null)
                 {
-                    connection.Dispose();
+                    _poolSQLite.ConnectionClose(connection);
                 }
             }
         }

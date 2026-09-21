@@ -1,14 +1,15 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly;
+using ProxyTG_HTTP.ExceptionBase.LogInfoANDLogWarn;
 using ProxyTG_HTTP.ModelData.JsonDataModels;
+using ProxyTG_HTTP.ReadedJson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
@@ -27,19 +28,18 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                 client.DefaultRequestHeaders.AcceptEncoding.ParseAdd("zip, deflate, br");
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
 
-                var urlValue = File.ReadAllText("appsettings.json");
-                var result = JsonSerializer.Deserialize<JsonDatStruct>(urlValue).Logging.PingToSerivceURL;
-                client.BaseAddress = new Uri(result.GIT);
+                var result = ReadAndDeserializeJson.MethodJsonSync<JsonDatStruct>();
+                client.BaseAddress = new Uri(result.Logging.PingToSerivceURL.GIT);
 
                 client.DefaultRequestVersion = HttpVersion.Version20;
                 client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
             });
             clientdescript.AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(
-                    TimeSpan.FromMinutes(0.30),
+                    TimeSpan.FromMinutes(1),
                     Polly.Timeout.TimeoutStrategy.Pessimistic,
                     onTimeoutAsync: (outcome, timespan, task) =>
                     {
-                        Console.WriteLine($"⏰ Request timed out after {timespan}");
+                        WarningAndInfoLog.LogWarning($"Таймаут запроса пинга после {timespan}", _logger);
                         return Task.CompletedTask;
                     }
                 ));
@@ -48,22 +48,22 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                 durationOfBreak: TimeSpan.FromMinutes(1),
                 onBreak: (outcome, timespan) =>
                 {
-                    Console.WriteLine($"🔌 Circuit opened for {timespan}");
+                    WarningAndInfoLog.LogWarning($"Circuit открыт на {timespan}", _logger);
                 },
                 onHalfOpen: () =>
                 {
-                    Console.WriteLine("⚠️ Circuit half-open");
+                    WarningAndInfoLog.LogInfo("Circuit half-open", _logger);
                 },
                 onReset: () =>
                 {
-                    Console.WriteLine("✅ Circuit reset");
+                    WarningAndInfoLog.LogInfo("Circuit reset", _logger);
                 }));
             clientdescript.AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(3, retrycount =>
             TimeSpan.FromSeconds(Math.Pow(2, retrycount)) +
             TimeSpan.FromMilliseconds(Random.Shared.Next(0, 100)),
             onRetry: (outcome, timespan, retrycount, context) =>
             {
-                Console.WriteLine($"🔄 Retry {retrycount} after {timespan}");
+                WarningAndInfoLog.LogWarning($"Повтор запроса пинга #{retrycount} через {timespan}", _logger);
             }));
             clientdescript.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler()
             {

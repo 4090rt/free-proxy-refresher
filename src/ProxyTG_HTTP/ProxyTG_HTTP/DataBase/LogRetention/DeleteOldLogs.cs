@@ -61,7 +61,7 @@ namespace ProxyTG_HTTP.DataBase.LogRetention
                 try
                 {
                     if (sQLiteTransaction != null && sQLiteTransaction.Connection != null &&
-                        sQLiteTransaction.Connection.State != System.Data.ConnectionState.Open)
+                        sQLiteTransaction.Connection.State == System.Data.ConnectionState.Open)
                     {
                         await sQLiteTransaction.RollbackAsync().ConfigureAwait(false);
                         _logger.LogInformation("Транзакция успешно откачена");
@@ -84,7 +84,7 @@ namespace ProxyTG_HTTP.DataBase.LogRetention
                 try
                 {
                     if (sQLiteTransaction != null && sQLiteTransaction.Connection != null &&
-                        sQLiteTransaction.Connection.State != System.Data.ConnectionState.Open)
+                        sQLiteTransaction.Connection.State == System.Data.ConnectionState.Open)
                     {
                         await sQLiteTransaction.RollbackAsync().ConfigureAwait(false);
                         _logger.LogInformation("Транзакция успешно откачена");
@@ -108,7 +108,7 @@ namespace ProxyTG_HTTP.DataBase.LogRetention
                 try
                 {
                     if (sQLiteTransaction != null && sQLiteTransaction.Connection != null &&
-                        sQLiteTransaction.Connection.State != System.Data.ConnectionState.Open)
+                        sQLiteTransaction.Connection.State == System.Data.ConnectionState.Open)
                     {
                         await sQLiteTransaction.RollbackAsync().ConfigureAwait(false);
                         _logger.LogInformation("Транзакция успешно откачена");

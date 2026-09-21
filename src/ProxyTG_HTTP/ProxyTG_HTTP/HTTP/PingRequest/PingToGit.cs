@@ -3,11 +3,11 @@ using ProxyTG_HTTP.DataBase.LogSaveClass;
 using ProxyTG_HTTP.ExceptionBase;
 using ProxyTG_HTTP.ModelData.JsonDataModels;
 using ProxyTG_HTTP.ModelData.PingData;
+using ProxyTG_HTTP.ReadedJson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ProxyTG_HTTP.HTTP.PingRequest
@@ -46,8 +46,7 @@ namespace ProxyTG_HTTP.HTTP.PingRequest
 
                     var ping = timer.ElapsedMilliseconds / 2;
 
-                    var hosttext = System.IO.File.ReadAllText("appsettings.json");
-                    var hostgit = JsonSerializer.Deserialize<JsonDatStruct>(hosttext).Logging.PingToSerivceURL;
+                    var hostgit = (await ReadAndDeserializeJson.MethodJson<JsonDatStruct>().ConfigureAwait(false)).Logging.PingToSerivceURL;
 
                     _logger.LogInformation($"Пинг до GIT: {ping} ms, статус {status}");
                     await _logSave.SaveLog($"Пинг до GIT: {ping} ms, статус {status}", DateTime.UtcNow.ToString());
@@ -64,8 +63,9 @@ namespace ProxyTG_HTTP.HTTP.PingRequest
                 {
                     var status = responseMessage.StatusCode;
 
-                    var hosttext = System.IO.File.ReadAllText("appsettings.json");
-                    var hostgit = JsonSerializer.Deserialize<JsonDatStruct>(hosttext).Logging.PingToSerivceURL;
+                    var ping = timer.ElapsedMilliseconds / 2;
+
+                    var hostgit = (await ReadAndDeserializeJson.MethodJson<JsonDatStruct>().ConfigureAwait(false)).Logging.PingToSerivceURL;
 
                     _logger.LogWarning($"Пинг до GIT: неуспешен, статус {status}");
                     await _logSave.SaveLog($"Пинг до GIT: неуспешен, статус {status}", DateTime.UtcNow.ToString());

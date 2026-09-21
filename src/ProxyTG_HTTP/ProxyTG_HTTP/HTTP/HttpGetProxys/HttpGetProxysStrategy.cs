@@ -41,7 +41,7 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
                 if (readOnlyMemory.Length == 0)
                     return new List<ProxyData>();
 
-                List<ProxyData> mtProtoParses = await _parseMTProto.ParseMethod(readOnlyMemory).ConfigureAwait(false); 
+                List<ProxyData> mtProtoParses = _parseMTProto.ParseMethod(readOnlyMemory); 
             
                 if (mtProtoParses.Count == 0)
                     return new List<ProxyData>();
@@ -83,7 +83,7 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
                 if (readOnlyMemory.Length == 0)
                     return new List<ProxyData>();
 
-                List<ProxyData> parseHttps = await _parseHttp.ParseMethod(readOnlyMemory).ConfigureAwait(false);
+                List<ProxyData> parseHttps = _parseHttp.ParseMethod(readOnlyMemory);
 
                 if (parseHttps.Count == 0)
                     return new List<ProxyData>();

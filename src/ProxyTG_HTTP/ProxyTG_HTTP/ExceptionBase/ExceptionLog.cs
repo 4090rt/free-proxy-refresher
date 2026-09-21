@@ -17,7 +17,7 @@ namespace ProxyTG_HTTP.ExceptionBase
                 logger.LogError($"📚 StackTrace: {ex.StackTrace}");
                 logger.LogError($"📎 Внутреннее исключение: {ex.InnerException?.Message ?? "Нет"}");
             }
-            catch (Exception exx)
+            catch
             {
                 throw new Exception("Исключение в ExceptionBase" + ex.Message);
             }

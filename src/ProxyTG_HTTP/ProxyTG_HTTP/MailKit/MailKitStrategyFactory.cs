@@ -9,7 +9,7 @@ namespace ProxyTG_HTTP.MailKit
 {
     public interface MailKitStrategyFactory
     {
-        public Task Strategy(List<LogModel> logModels);
+        public Task Strategy(List<LogModel> logModels, string? attachmentPath = null);
     }
 
     public class StrategyGoogle: MailKitStrategyFactory
@@ -21,9 +21,9 @@ namespace ProxyTG_HTTP.MailKit
             _mailKitClient = mailKitClient;
         }
 
-        public async Task Strategy(List<LogModel> logModels)
+        public async Task Strategy(List<LogModel> logModels, string? attachmentPath = null)
         {
-            await _mailKitClient.SendMail(logModels).ConfigureAwait(false);
+            await _mailKitClient.SendMail(logModels, attachmentPath).ConfigureAwait(false);
         }
     }
 
@@ -36,9 +36,9 @@ namespace ProxyTG_HTTP.MailKit
             _MailKitClientYandex = mailKitClientYandex;
         }
 
-        public async Task Strategy(List<LogModel> logModels)
+        public async Task Strategy(List<LogModel> logModels, string? attachmentPath = null)
         {
-            await _MailKitClientYandex.SendMail(logModels).ConfigureAwait(false);
+            await _MailKitClientYandex.SendMail(logModels, attachmentPath).ConfigureAwait(false);
         }
     }
 
