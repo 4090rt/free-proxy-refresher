@@ -17,7 +17,7 @@ namespace ProxyTG_HTTP.Parser
             _logger = logger;
         }
 
-        public async Task<List<ProxyData>> ParseMethod(ReadOnlyMemory<byte> readOnlyMemory)
+        public List<ProxyData> ParseMethod(ReadOnlyMemory<byte> readOnlyMemory)
         {
             try
             { 

@@ -1,5 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ProxyTG_HTTP.Cache;
+using ProxyTG_HTTP.Controller;
+using ProxyTG_HTTP.CreatePDF;
 using ProxyTG_HTTP.DataBase.AddLog;
 using ProxyTG_HTTP.DataBase.CreateTable;
 using ProxyTG_HTTP.DataBase.DbPath;
@@ -8,6 +12,7 @@ using ProxyTG_HTTP.DataBase.LogRetention;
 using ProxyTG_HTTP.DataBase.LogSaveClass;
 using ProxyTG_HTTP.DataBase.PoolSQLiteConnection;
 using ProxyTG_HTTP.ExceptionBase;
+using ProxyTG_HTTP.ExceptionBase.LogInfoANDLogWarn;
 using ProxyTG_HTTP.HTTP.HTTPClientSettings;
 using ProxyTG_HTTP.HTTP.HttpGet;
 using ProxyTG_HTTP.HTTP.HttpGetProxys;
@@ -17,15 +22,18 @@ using ProxyTG_HTTP.ModelData.JsonDataModels;
 using ProxyTG_HTTP.ModelData.ParseData;
 using ProxyTG_HTTP.ModelData.PingData;
 using ProxyTG_HTTP.Parser;
+using ProxyTG_HTTP.ReadedJson;
 using ProxyTG_HTTP.SendToMail;
+using SimpleW;
+using SimpleW.Observability;
 using System;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
-using System.Text.Json;
+using static System.Net.WebRequestMethods;
 
 class Program
 {
-    private static ILogger<Program> _logger;
+    private static Microsoft.Extensions.Logging.ILogger<Program> _logger;
     public static async Task Main(string[] args)
     {
         using var loggerFactory = LoggerFactory.Create(builder =>
@@ -36,8 +44,7 @@ class Program
 
         var servise = new ServiceCollection();
 
-        var json = File.ReadAllText("appsettings.json");
-        var jsonallDes = JsonSerializer.Deserialize<JsonDatStruct>(json);
+        var jsonallDes = await ReadAndDeserializeJson.MethodJson<JsonDatStruct>();
 
         servise.AddLogging(build =>
         {
@@ -59,6 +66,7 @@ class Program
         servise.AddScoped<TableForLog>();
         servise.AddScoped<AddNewLogs>();
         servise.AddScoped<SendLogToMail>();
+        servise.AddScoped<CreateFile>();
         servise.AddScoped<MailKitClientYandex>();
         servise.AddScoped<AllLogsRequest>();
         servise.AddScoped<MailKitClient>();
@@ -76,6 +84,10 @@ class Program
         servise.AddScoped<ConsolePing>();
         servise.AddScoped<PingToGit>();
         servise.AddScoped<PingToGoggle>();
+        servise.AddScoped<MemoryCacheHttpList>();
+        servise.AddScoped<MemoryCacheMTProtoList>();
+        servise.AddScoped<ControllerGetAllProxy>();
+        servise.AddMemoryCache();
 
         var serviceProvider = servise.BuildServiceProvider();
 
@@ -92,6 +104,9 @@ class Program
         //очистка старых сессий
         await servicedeletelogs.LogsDeleteMethod(jsonallDes.Logging.LogReterningDay.Day).ConfigureAwait(false);
 
+        //запуск локального хоста
+        await HostRun();
+
         _logger.LogInformation("Cкрипт запущен");
         await serviceNewLog.SaveLog("Cкрипт запущен", DateTime.UtcNow.ToString());
 
@@ -103,6 +118,8 @@ class Program
         Console.ForegroundColor = ConsoleColor.White;
 
         var cts = new CancellationTokenSource();
+
+        await RequestPruxyMethod(serviceProvider).ConfigureAwait(false);
 
         try
         {
@@ -121,13 +138,19 @@ class Program
                     }
                     else if (input.ToLower() == "/ping")
                     {
-                        var pingGit = await PingToGitService(serviceProvider).ConfigureAwait(false);
-                        var pingGoogle = await PingToGoogleService(serviceProvider).ConfigureAwait(false);
+                        Task<DataPing> dataPingGit = PingToGitService(serviceProvider);
+                        Task<DataPing> dataPingGoogle = PingToGoogleService(serviceProvider);
+
+                        await Task.WhenAll(dataPingGit, dataPingGoogle).ConfigureAwait(false);
+
+                        DataPing pingGit = await dataPingGit.ConfigureAwait(false);
+                        DataPing pingGoogle = await dataPingGoogle.ConfigureAwait(false);
 
                         list.Add(pingGit);
                         list.Add(pingGoogle);
 
                         pingConsole.PrintPing(list);
+                        list.Clear();
                     }
                     else
                     {
@@ -151,9 +174,6 @@ class Program
             await serviceNewLog.SaveLog("Асинхронная задача выкинула исключение:" + ex.Message, DateTime.UtcNow.ToString());
             cts.Cancel();   
         }
-
-        await RequestPruxyMethod(serviceProvider).ConfigureAwait(false);
-
     }
 
     public static async Task SendMail(ServiceProvider serviceProvider)
@@ -181,38 +201,26 @@ class Program
         }
     }
 
-    private static LogLevel ParseLogLevel(string level)
+    private static Microsoft.Extensions.Logging.LogLevel ParseLogLevel(string level)
     {
         try
         {
             return level?.ToLower() switch
             {
-                "trace" => LogLevel.Trace,
-                "debug" => LogLevel.Debug,
-                "information" => LogLevel.Information,
-                "warning" => LogLevel.Warning,
-                "error" => LogLevel.Error,
-                "critical" => LogLevel.Critical,
-                "none" => LogLevel.None,
-                _ => LogLevel.Information
+                "trace" => Microsoft.Extensions.Logging.LogLevel.Trace,
+                "debug" => Microsoft.Extensions.Logging.LogLevel.Debug,
+                "information" => Microsoft.Extensions.Logging.LogLevel.Information,
+                "warning" => Microsoft.Extensions.Logging.LogLevel.Warning,
+                "error" => Microsoft.Extensions.Logging.LogLevel.Error,
+                "critical" => Microsoft.Extensions.Logging.LogLevel.Critical,
+                "none" => Microsoft.Extensions.Logging.LogLevel.None,
+                _ => Microsoft.Extensions.Logging.LogLevel.Information
             };
         }
         catch (Exception ex)
         { 
             Console.WriteLine(ex.Message.ToString() + ex.StackTrace.ToString());
-            return new LogLevel();
-        }
-    }
-
-    public async Task RequestProxy()
-    {
-        try
-        {
-
-        }
-        catch (HttpRequestException ex)
-        {
-            ExceptionLog.LogError(ex,_logger);
+            return new Microsoft.Extensions.Logging.LogLevel();
         }
     }
 
@@ -286,27 +294,79 @@ class Program
             return new DataPing();
         }
     }
+    public static Timer _proxyTimer = null!;
 
     public static async Task RequestPruxyMethod(ServiceProvider serviceProvider)
     {
+
         var getProxy = serviceProvider.GetRequiredService<Fabric_GIT>();
         var serviceNewLog = serviceProvider.GetRequiredService<LogSave>();
+        var cacheHttp = serviceProvider.GetRequiredService<MemoryCacheHttpList>();
+        var cacheMtpRoto = serviceProvider.GetRequiredService<MemoryCacheMTProtoList>();
         try
         {
-            var timer = new System.Threading.Timer(async _ =>
-            {
-                var strategy1 = getProxy.HttpGetPRoxysFabric("mtproto");
-                var strategy2 = getProxy.HttpGetPRoxysFabric("http");
+            WarningAndInfoLog.LogInfo("Запускаю таймер обновления прокси (каждые 12 часов)", _logger);
+            await serviceNewLog.SaveLog("Запускаю таймер обновления прокси (каждые 12 часов)", DateTime.UtcNow.ToString());
 
-                List<ProxyData> strategy1Go = await strategy1.HttpClients().ConfigureAwait(false);
-                List<ProxyData> strategy2Go = await strategy2.HttpClients().ConfigureAwait(false);
+            _proxyTimer = new Timer(async _ =>
+            {
+                try
+                {
+                    var mtProtoStrategy = getProxy.HttpGetPRoxysFabric("mtproto");
+                    var httpStrategy = getProxy.HttpGetPRoxysFabric("http");
+
+                    Task<List<ProxyData>> mtProtoTask = mtProtoStrategy.HttpClients();
+                    Task<List<ProxyData>> httpTask = httpStrategy.HttpClients();
+
+                    await Task.WhenAll(mtProtoTask, httpTask).ConfigureAwait(false);
+
+                    List<ProxyData> mtProtoData = await mtProtoTask.ConfigureAwait(false);
+                    List<ProxyData> httpData = await httpTask.ConfigureAwait(false);
+
+                    WarningAndInfoLog.LogInfo($"Получено прокси: HTTP {httpData.Count}, MTProto {mtProtoData.Count}", _logger);
+                    await serviceNewLog.SaveLog($"Получено прокси: HTTP {httpData.Count}, MTProto {mtProtoData.Count}", DateTime.UtcNow.ToString());
+
+                    List<HttpParse> httpParses = httpData.Select(p => new HttpParse {IP = p.Server, Port = p.Port}).ToList();
+                    List<MtProtoParse> MTProtoParses = mtProtoData.Select(p => new MtProtoParse 
+                    {ServerKey = p.Server, PortKey = p.Port, SecretKey = p.Secret ?? string.Empty}).ToList();
+
+                    cacheHttp.Cache(httpParses);
+                    cacheMtpRoto.Cache(MTProtoParses);
+
+                    WarningAndInfoLog.LogInfo($"✅ Кэш обновлён: HTTP {httpParses.Count}, MTProto {MTProtoParses.Count}", _logger);
+                    await serviceNewLog.SaveLog($"Кэш обновлён: HTTP {httpParses.Count}, MTProto {MTProtoParses.Count}", DateTime.UtcNow.ToString());
+                }
+                catch (Exception ex)
+                {
+                    ExceptionLog.LogError(ex, _logger);
+                    await serviceNewLog.SaveLog("Ошибка обновления прокси: " + ex.Message, DateTime.UtcNow.ToString());
+                }
 
             }, null, TimeSpan.Zero, TimeSpan.FromHours(12));
         }
         catch (Exception ex)
         {
-            _logger.LogError("Таймер выбросил исключение" + ex.Message);
-            await serviceNewLog.SaveLog("Асинхронная задача выкинула исключение:" + ex.Message, DateTime.UtcNow.ToString());
+            ExceptionLog.LogError(ex, _logger);
+            await serviceNewLog.SaveLog("Таймер обновления прокси не запущен: " + ex.Message, DateTime.UtcNow.ToString());
+        }
+    }
+
+    public static async Task HostRun()
+    {
+        try
+        {
+            Log.SetSink(log => Console.WriteLine($"{log.LocalTime:HH:mm:ss.fff} [{log.LevelSmiley}|{log.LevelName3Len}] {log.Source} {log.Message}" +
+                $" {log.Exception?.Message} {log.Exception?.Source}"), SimpleW.Observability.LogLevel.Debug);
+
+            var server = new SimpleWServer(IPAddress.Any, 2015);
+
+            server.MapControllers<Controller>("/api");
+
+            await server.StartAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            ExceptionLog.LogError(ex, _logger);
         }
     }
 }

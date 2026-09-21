@@ -18,12 +18,12 @@ namespace ProxyTG_HTTP.Parser
             _logger = logger;
         }
 
-        public async Task<List<ProxyData>> ParseMethod(ReadOnlyMemory<byte> readOnlyMemory)
+        public List<ProxyData> ParseMethod(ReadOnlyMemory<byte> readOnlyMemory)
         {
             try
             { 
                 var list = new List<ProxyData>();
-                var text = System.Text.Encoding.UTF8.GetString(readOnlyMemory.ToArray());
+                var text = System.Text.Encoding.UTF8.GetString(readOnlyMemory.Span);
                 var lines = text.Split('\n', '\r', StringSplitOptions.RemoveEmptyEntries);
 
                 if (lines == null)
