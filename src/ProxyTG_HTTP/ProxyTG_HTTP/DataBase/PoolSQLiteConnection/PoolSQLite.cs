@@ -31,9 +31,15 @@ namespace ProxyTG_HTTP.DataBase.PoolSQLiteConnection
             SQLiteConnection connection = null;
             try
             {
-                connection = new SQLiteConnection($"Data Source={_path}");
+                connection = new SQLiteConnection($"Data Source={_path};Busy Timeout=5000");
                 connection.Open();
-                return connection;
+
+                using (SQLiteCommand sQLiteCommand = new SQLiteCommand("PRAGMA busy_timeout = 5000;", connection))
+                { 
+                    sQLiteCommand.ExecuteNonQuery();
+                }
+
+               return connection;
             }
             catch (SQLiteException ex)
             {

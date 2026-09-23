@@ -26,11 +26,13 @@ namespace ProxyTG_HTTP.ReadedJson
             {
                 var json = System.IO.File.ReadAllText(filename);
                 resylt = JsonSerializer.Deserialize<T>(json);
-
             }
             catch
             {
-                resylt = new T();
+                if (_cache.TryGetValue(typeof(T), out var old) && old is T oldVal)
+                    return oldVal;
+
+                throw new InvalidDataException($"Не удалось прочитать/десериализовать {filename}");
             }
 
             _cache[typeof(T)] = resylt;

@@ -86,10 +86,11 @@ class Program
         servise.AddScoped<PingToGoggle>();
         servise.AddScoped<MemoryCacheHttpList>();
         servise.AddScoped<MemoryCacheMTProtoList>();
-        servise.AddScoped<ControllerGetAllProxy>();
         servise.AddMemoryCache();
 
         var serviceProvider = servise.BuildServiceProvider();
+
+        ControllerGetAllProxy.Services = serviceProvider;
 
         var tableForLogFromDi = serviceProvider.GetRequiredService<TableForLog>();
         var serviceNewLog = serviceProvider.GetRequiredService<LogSave>();
@@ -166,6 +167,7 @@ class Program
             catch (TaskCanceledException ex)
             {
                 _logger.LogWarning("Прогамме успешно завершена!" + ex.Message);
+                _proxyTimer?.Dispose();
             }
         }
         catch (Exception ex)
@@ -298,6 +300,7 @@ class Program
 
     public static async Task RequestPruxyMethod(ServiceProvider serviceProvider)
     {
+        int _isRefreshing = 0;
 
         var getProxy = serviceProvider.GetRequiredService<Fabric_GIT>();
         var serviceNewLog = serviceProvider.GetRequiredService<LogSave>();
@@ -307,9 +310,17 @@ class Program
         {
             WarningAndInfoLog.LogInfo("Запускаю таймер обновления прокси (каждые 12 часов)", _logger);
             await serviceNewLog.SaveLog("Запускаю таймер обновления прокси (каждые 12 часов)", DateTime.UtcNow.ToString());
+            using var cts = new CancellationTokenSource();
+
 
             _proxyTimer = new Timer(async _ =>
             {
+                if (Interlocked.Exchange(ref _isRefreshing, 1) == 1)
+                {
+                    WarningAndInfoLog.LogInfo("Обновление уже выполняется, пропускаем тик", _logger);
+                    return;
+                }
+
                 try
                 {
                     var mtProtoStrategy = getProxy.HttpGetPRoxysFabric("mtproto");
@@ -326,9 +337,9 @@ class Program
                     WarningAndInfoLog.LogInfo($"Получено прокси: HTTP {httpData.Count}, MTProto {mtProtoData.Count}", _logger);
                     await serviceNewLog.SaveLog($"Получено прокси: HTTP {httpData.Count}, MTProto {mtProtoData.Count}", DateTime.UtcNow.ToString());
 
-                    List<HttpParse> httpParses = httpData.Select(p => new HttpParse {IP = p.Server, Port = p.Port}).ToList();
-                    List<MtProtoParse> MTProtoParses = mtProtoData.Select(p => new MtProtoParse 
-                    {ServerKey = p.Server, PortKey = p.Port, SecretKey = p.Secret ?? string.Empty}).ToList();
+                    List<HttpParse> httpParses = httpData.Select(p => new HttpParse { IP = p.Server, Port = p.Port }).ToList();
+                    List<MtProtoParse> MTProtoParses = mtProtoData.Select(p => new MtProtoParse
+                    { ServerKey = p.Server, PortKey = p.Port, SecretKey = p.Secret ?? string.Empty }).ToList();
 
                     cacheHttp.Cache(httpParses);
                     cacheMtpRoto.Cache(MTProtoParses);
@@ -341,6 +352,10 @@ class Program
                     ExceptionLog.LogError(ex, _logger);
                     await serviceNewLog.SaveLog("Ошибка обновления прокси: " + ex.Message, DateTime.UtcNow.ToString());
                 }
+                finally
+                {
+                    Interlocked.Exchange(ref _isRefreshing, 0);
+                }
 
             }, null, TimeSpan.Zero, TimeSpan.FromHours(12));
         }
@@ -348,6 +363,7 @@ class Program
         {
             ExceptionLog.LogError(ex, _logger);
             await serviceNewLog.SaveLog("Таймер обновления прокси не запущен: " + ex.Message, DateTime.UtcNow.ToString());
+            _proxyTimer.Dispose();
         }
     }
 

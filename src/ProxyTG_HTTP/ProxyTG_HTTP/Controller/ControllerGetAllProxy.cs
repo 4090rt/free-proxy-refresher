@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ProxyTG_HTTP.Cache;
 using ProxyTG_HTTP.ExceptionBase;
@@ -16,15 +17,17 @@ namespace ProxyTG_HTTP.Controller
     [Route("/proxy")]
     public class ControllerGetAllProxy: SimpleW.Controller 
     {
+        public static IServiceProvider Services = default!;
+
         private readonly ILogger<ControllerGetAllProxy> _logger;
         private readonly MemoryCacheHttpList _memoryCacheHttpList;
         private readonly MemoryCacheMTProtoList _memoryMTProtoList;
 
-        public ControllerGetAllProxy(ILogger<ControllerGetAllProxy> logger, MemoryCacheHttpList memoryCacheHttpList, MemoryCacheMTProtoList memoryMTProtoList)
+        public ControllerGetAllProxy()
         {
-            _logger = logger;
-            _memoryCacheHttpList = memoryCacheHttpList;
-            _memoryMTProtoList = memoryMTProtoList;
+            _logger = Services.GetRequiredService<ILogger<ControllerGetAllProxy>>();
+            _memoryCacheHttpList = Services.GetRequiredService<MemoryCacheHttpList>();
+            _memoryMTProtoList = Services.GetRequiredService<MemoryCacheMTProtoList>();
         }
 
         [Route("GET", "/MTPROTO")]
