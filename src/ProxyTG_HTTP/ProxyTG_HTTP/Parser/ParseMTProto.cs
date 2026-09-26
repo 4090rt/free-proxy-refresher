@@ -11,6 +11,8 @@ namespace ProxyTG_HTTP.Parser
 {
     public class ParseMTProto
     {
+        private static readonly char[] LineSeparators = { '\n', '\r' };
+
         public readonly ILogger<ParseMTProto> _logger;
 
         public ParseMTProto(ILogger<ParseMTProto> logger)
@@ -24,7 +26,7 @@ namespace ProxyTG_HTTP.Parser
             { 
                 var list = new List<ProxyData>();
                 var text = System.Text.Encoding.UTF8.GetString(readOnlyMemory.Span);
-                var lines = text.Split('\n', '\r', StringSplitOptions.RemoveEmptyEntries);
+                var lines = text.Split(LineSeparators, StringSplitOptions.RemoveEmptyEntries);
 
                 if (lines == null)
                     return new List<ProxyData>();

@@ -22,12 +22,14 @@ namespace ProxyTG_HTTP.Controller
         private readonly ILogger<ControllerGetAllProxy> _logger;
         private readonly MemoryCacheHttpList _memoryCacheHttpList;
         private readonly MemoryCacheMTProtoList _memoryMTProtoList;
+        private readonly MemoryCacheSocks5List _memorySocks5List;
 
         public ControllerGetAllProxy()
         {
             _logger = Services.GetRequiredService<ILogger<ControllerGetAllProxy>>();
             _memoryCacheHttpList = Services.GetRequiredService<MemoryCacheHttpList>();
             _memoryMTProtoList = Services.GetRequiredService<MemoryCacheMTProtoList>();
+            _memorySocks5List = Services.GetRequiredService<MemoryCacheSocks5List>();
         }
 
         [Route("GET", "/MTPROTO")]
@@ -73,6 +75,63 @@ namespace ProxyTG_HTTP.Controller
             {
                 ExceptionLog.LogError(ex, _logger);
                 return Task.FromResult(new List<HttpParse>());
+            }
+        }
+
+        [Route("GET", "/SOCKS5")]
+        public Task<List<HttpParse>> GetSocks5()
+        {
+            try
+            {
+                List<HttpParse> list = _memorySocks5List.Get();
+
+                if (list == null || list.Count == 0)
+                {
+                    WarningAndInfoLog.LogWarning("Запрос /SOCKS5: кэш пуст", _logger);
+                    return Task.FromResult(new List<HttpParse>());
+                }
+
+                WarningAndInfoLog.LogInfo($"Запрос /SOCKS5: отдано {list.Count} прокси", _logger);
+                return Task.FromResult(list);
+            }
+            catch (Exception ex)
+            {
+                ExceptionLog.LogError(ex, _logger);
+                return Task.FromResult(new List<HttpParse>());
+            }
+        }
+
+        [Route("GET", "/ALL")]
+        public Task<AllStrcut> AllLists()
+        {
+            try
+            {
+                List<HttpParse> httpList = _memoryCacheHttpList.Get();
+                List<MtProtoParse> mtProtoList = _memoryMTProtoList.Get();
+                List<HttpParse> socks5List = _memorySocks5List.Get();
+
+                if ((httpList == null || httpList.Count == 0) &&
+                    (mtProtoList == null || mtProtoList.Count == 0) &&
+                    (socks5List == null || socks5List.Count == 0))
+                {
+                    WarningAndInfoLog.LogWarning("Запрос /ALL: все кэши пусты", _logger);
+                    return Task.FromResult(new AllStrcut());
+                }
+
+                var strcut = new AllStrcut
+                {
+                    listHTTP = httpList ?? new List<HttpParse>(),
+                    listMTPRoto = mtProtoList ?? new List<MtProtoParse>(),
+                    listSocks5 = socks5List ?? new List<HttpParse>()
+                };
+
+                WarningAndInfoLog.LogInfo($"Запрос /ALL: отдано HTTP {httpList?.Count ?? 0}, MTProto {mtProtoList?.Count ?? 0}, SOCKS5 {socks5List?.Count ?? 0}", _logger);
+                return Task.FromResult(strcut);
+            }
+            catch (Exception ex)
+            {
+                ExceptionLog.LogError(ex, _logger);
+                return Task.FromResult(new AllStrcut());
             }
         }
 

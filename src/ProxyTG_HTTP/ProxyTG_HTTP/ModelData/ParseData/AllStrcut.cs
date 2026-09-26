@@ -10,5 +10,6 @@ namespace ProxyTG_HTTP.ModelData.ParseData
     {
         public List<HttpParse> listHTTP { get; set; }
         public List<MtProtoParse> listMTPRoto { get; set; }
+        public List<HttpParse> listSocks5 { get; set; }
     }
 }

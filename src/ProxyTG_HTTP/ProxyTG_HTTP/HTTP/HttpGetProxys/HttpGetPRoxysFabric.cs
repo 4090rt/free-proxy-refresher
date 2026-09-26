@@ -46,15 +46,34 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
         }
     }
 
+    public class HttpClient_Git_Socks5 : HttpGetPRoxysFabric
+    {
+        public RequestSocks5 _requestSocks5;
+
+        public HttpClient_Git_Socks5(RequestSocks5 requestSocks5) => _requestSocks5 = requestSocks5;
+
+        public async Task<List<ProxyData>> HttpClients()
+        {
+            var client = "Client_GIT_SOCKS5";
+
+            StrategyClass strategyClass = new StrategyClass(_requestSocks5);
+            List<ProxyData> list = await strategyClass.MainMethod(client).ConfigureAwait(false);
+
+            return list;
+        }
+    }
+
     public class Fabric_GIT
     {
         public RequestHttp _requestHttp;
         public RequestMTProto _requestMTProto;
+        public RequestSocks5 _requestSocks5;
 
-        public Fabric_GIT(RequestHttp requestHttp, RequestMTProto requestMTProto)
+        public Fabric_GIT(RequestHttp requestHttp, RequestMTProto requestMTProto, RequestSocks5 requestSocks5)
         { 
             _requestHttp = requestHttp;
             _requestMTProto = requestMTProto;
+            _requestSocks5 = requestSocks5;
         }
 
         public  HttpGetPRoxysFabric HttpGetPRoxysFabric(string type_client)
@@ -63,6 +82,7 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
             {
                 "mtproto" => new HttpClient_Git_MTProto(_requestMTProto),
                 "http" => new HttpClient_Git_Http(_requestHttp),
+                "socks5" => new HttpClient_Git_Socks5(_requestSocks5),
                 _ => throw new ArgumentException($"Неизвестный тип прокси: {type_client}")
             };
         }
