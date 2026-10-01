@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,7 @@ using ProxyTG_HTTP.Cache;
 using ProxyTG_HTTP.ExceptionBase;
 using ProxyTG_HTTP.ExceptionBase.LogInfoANDLogWarn;
 using ProxyTG_HTTP.ModelData.ParseData;
+using ProxyTG_HTTP.TestSocks5.CheckWebProxy;
 using SimpleW;
 
 namespace ProxyTG_HTTP.Controller
@@ -23,6 +25,7 @@ namespace ProxyTG_HTTP.Controller
         private readonly MemoryCacheHttpList _memoryCacheHttpList;
         private readonly MemoryCacheMTProtoList _memoryMTProtoList;
         private readonly MemoryCacheSocks5List _memorySocks5List;
+        private readonly TestCicle _testCicle;
 
         public ControllerGetAllProxy()
         {
@@ -30,6 +33,7 @@ namespace ProxyTG_HTTP.Controller
             _memoryCacheHttpList = Services.GetRequiredService<MemoryCacheHttpList>();
             _memoryMTProtoList = Services.GetRequiredService<MemoryCacheMTProtoList>();
             _memorySocks5List = Services.GetRequiredService<MemoryCacheSocks5List>();
+            _testCicle = Services.GetRequiredService<TestCicle>();
         }
 
         [Route("GET", "/MTPROTO")]
@@ -99,6 +103,48 @@ namespace ProxyTG_HTTP.Controller
                 ExceptionLog.LogError(ex, _logger);
                 return Task.FromResult(new List<HttpParse>());
             }
+        }
+
+        [Route("GET", "/SOCKS5_Tested")]
+        public Task<CheckedSocks5> GetSocjs5Test()
+        {
+            try
+            {
+                // не null: SimpleW не умеет сериализовать null-возврат и отдаёт 500
+                CheckedSocks5 tested = _memorySocks5List.GetTestedEntry() ?? new CheckedSocks5();
+
+                if (tested.Proxies.Count == 0)
+                {
+                    WarningAndInfoLog.LogWarning("Запрос /SOCKS5_Tested: тестированный кэш пуст", _logger);
+                    return Task.FromResult(tested);
+                }
+
+                WarningAndInfoLog.LogInfo($"Запрос /SOCKS5_Tested: отдано {tested.Proxies.Count} прокси, проверка {tested.CheckedAtUtc}", _logger);
+                return Task.FromResult(tested);
+            }
+            catch (Exception ex)
+            {
+                ExceptionLog.LogError(ex, _logger);
+                return Task.FromResult(new CheckedSocks5());
+            }
+        }
+
+        [Route("GET", "/SOCKS5_Check")]
+        public Task<string> CheckSocks5()
+        {
+            // Проверка идёт в фоне: SimpleW рвёт сессию примерно через 30 секунд,
+            // а последовательный цикл на сотни прокси дольше. Клиент только запускает,
+            // результат забирает отдельным запросом /SOCKS5_Tested.
+            if (_testCicle.IsRunning)
+            {
+                WarningAndInfoLog.LogWarning("Запрос /SOCKS5_Check: проверка уже идёт, повторный запуск проигнорирован", _logger);
+                return Task.FromResult("Проверка уже выполняется, дождитесь завершения");
+            }
+
+            _ = Task.Run(() => _testCicle.TestMethod());
+
+            WarningAndInfoLog.LogInfo("Запрос /SOCKS5_Check: проверка запущена в фоне", _logger);
+            return Task.FromResult("Проверка запущена, результат смотрите в /api/proxy/SOCKS5_Tested");
         }
 
         [Route("GET", "/ALL")]

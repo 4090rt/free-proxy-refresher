@@ -15,6 +15,7 @@ namespace ProxyTG_HTTP.Cache
 
         public string cache_key = "Socks5Cache_key";
         public string staleCachekey = "Socks5Cache_key_stale";
+        public string cache_key_tested = "Socks5Cache_key_tested";
 
         public MemoryCacheSocks5List(ILogger<MemoryCacheSocks5List> logger, IMemoryCache memorycache)
         {
@@ -76,6 +77,76 @@ namespace ProxyTG_HTTP.Cache
                 ExceptionLog.LogError(ex, _logger);
                 return new List<HttpParse>();
             }
+        }
+
+        public void CacheTested(List<HttpParse> parseTested)
+        {
+            try
+            {
+                if (parseTested != null && parseTested.Count != 0)
+                {
+                    var entry = new CheckedSocks5
+                    {
+                        Proxies = parseTested,
+                        CheckedAtUtc = DateTime.UtcNow
+                    };
+
+                    var options = new MemoryCacheEntryOptions()
+                        .SetAbsoluteExpiration(TimeSpan.FromHours(3));
+
+                    _memorycache.Set(cache_key_tested, entry, options);
+                    WarningAndInfoLog.LogInfo($"✅ SOCKS5-кэш тестированный обновлён: {parseTested.Count} прокси работают, проверка {entry.CheckedAtUtc}", _logger);
+                }
+                else
+                {
+                    WarningAndInfoLog.LogWarning("Результат проверки SOCKS5 пуст, кэш не обновлён", _logger);
+                }
+            }
+            catch (Exception ex)
+            {
+                ExceptionLog.LogError(ex, _logger);
+            }
+        }
+
+        public List<HttpParse> GetTested()
+        {
+            try
+            {
+                if (TryGetTestedEntry(out CheckedSocks5? cached) && cached != null)
+                {
+                    WarningAndInfoLog.LogInfo($"Отдаю Socks5 тестированные прокси: {cached.Proxies.Count} прокси, проверка {cached.CheckedAtUtc}", _logger);
+                    return cached.Proxies;
+                }
+                WarningAndInfoLog.LogWarning("🆘 Нет тестированных SOCKS5 данных", _logger);
+                return new List<HttpParse>();
+            }
+            catch (Exception ex)
+            {
+                ExceptionLog.LogError(ex, _logger);
+                return new List<HttpParse>();
+            }
+        }
+
+        public CheckedSocks5? GetTestedEntry()
+        {
+            try
+            {
+                if (TryGetTestedEntry(out CheckedSocks5? cached) && cached != null)
+                {
+                    return cached;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                ExceptionLog.LogError(ex, _logger);
+                return null;
+            }
+        }
+
+        private bool TryGetTestedEntry(out CheckedSocks5? entry)
+        {
+            return _memorycache.TryGetValue(cache_key_tested, out entry) && entry != null;
         }
     }
 }

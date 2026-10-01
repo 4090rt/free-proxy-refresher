@@ -24,6 +24,7 @@ using ProxyTG_HTTP.ModelData.PingData;
 using ProxyTG_HTTP.Parser;
 using ProxyTG_HTTP.ReadedJson;
 using ProxyTG_HTTP.SendToMail;
+using ProxyTG_HTTP.TestSocks5.CheckWebProxy;
 using SimpleW;
 using SimpleW.Observability;
 using System;
@@ -60,6 +61,7 @@ class Program
 
         new Client_GIT_MTProto(loggerFactory.CreateLogger<Client_GIT_MTProto>()).Client_SettingsGit(servise);
         new Client_GIT_HTTP(loggerFactory.CreateLogger<Client_GIT_HTTP>()).Client_SettingsGit_HTTP(servise);
+        new Client_GIT_SOCKS5(loggerFactory.CreateLogger<Client_GIT_SOCKS5>()).Client_SettingsGit_SOCKS5(servise);
         new Client_Git_Ping(loggerFactory.CreateLogger<Client_Git_Ping>()).Client_SettingsGit_Ping(servise);
         new Client_Google(loggerFactory.CreateLogger<Client_Google>()).Client_SettingsGoogle(servise);
 
@@ -71,10 +73,12 @@ class Program
         servise.AddScoped<AllLogsRequest>();
         servise.AddScoped<MailKitClient>();
         servise.AddScoped<ParseHttp>();
+        servise.AddScoped<ParseSocks5>();
         servise.AddScoped<ParseMTProto>();
         servise.AddScoped<GetProxys>();
         servise.AddScoped<RequestMTProto>();
         servise.AddScoped<RequestHttp>();
+        servise.AddScoped<RequestSocks5>();
         servise.AddScoped<StrategyClass>();
         servise.AddScoped<HttpClient_Git_MTProto>();
         servise.AddScoped<HttpClient_Git_Http>();
@@ -86,6 +90,10 @@ class Program
         servise.AddScoped<PingToGoggle>();
         servise.AddScoped<MemoryCacheHttpList>();
         servise.AddScoped<MemoryCacheMTProtoList>();
+        servise.AddScoped<MemoryCacheSocks5List>();
+        servise.AddScoped<TestSocksClient>();
+        servise.AddScoped<TestSocks5WebProxy>();
+        servise.AddScoped<TestCicle>();
         servise.AddMemoryCache();
 
         var serviceProvider = servise.BuildServiceProvider();
@@ -306,6 +314,7 @@ class Program
         var serviceNewLog = serviceProvider.GetRequiredService<LogSave>();
         var cacheHttp = serviceProvider.GetRequiredService<MemoryCacheHttpList>();
         var cacheMtpRoto = serviceProvider.GetRequiredService<MemoryCacheMTProtoList>();
+        var cacheSocks5 = serviceProvider.GetRequiredService<MemoryCacheSocks5List>();
         try
         {
             WarningAndInfoLog.LogInfo("Запускаю таймер обновления прокси (каждые 12 часов)", _logger);
@@ -325,27 +334,32 @@ class Program
                 {
                     var mtProtoStrategy = getProxy.HttpGetPRoxysFabric("mtproto");
                     var httpStrategy = getProxy.HttpGetPRoxysFabric("http");
+                    var socks5Strategy = getProxy.HttpGetPRoxysFabric("socks5");
 
                     Task<List<ProxyData>> mtProtoTask = mtProtoStrategy.HttpClients();
                     Task<List<ProxyData>> httpTask = httpStrategy.HttpClients();
+                    Task<List<ProxyData>> socks5Task = socks5Strategy.HttpClients();
 
-                    await Task.WhenAll(mtProtoTask, httpTask).ConfigureAwait(false);
+                    await Task.WhenAll(mtProtoTask, httpTask, socks5Task).ConfigureAwait(false);
 
                     List<ProxyData> mtProtoData = await mtProtoTask.ConfigureAwait(false);
                     List<ProxyData> httpData = await httpTask.ConfigureAwait(false);
+                    List<ProxyData> socks5Data = await socks5Task.ConfigureAwait(false);
 
-                    WarningAndInfoLog.LogInfo($"Получено прокси: HTTP {httpData.Count}, MTProto {mtProtoData.Count}", _logger);
-                    await serviceNewLog.SaveLog($"Получено прокси: HTTP {httpData.Count}, MTProto {mtProtoData.Count}", DateTime.UtcNow.ToString());
+                    WarningAndInfoLog.LogInfo($"Получено прокси: HTTP {httpData.Count}, MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count}", _logger);
+                    await serviceNewLog.SaveLog($"Получено прокси: HTTP {httpData.Count}, MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count}", DateTime.UtcNow.ToString());
 
-                    List<HttpParse> httpParses = httpData.Select(p => new HttpParse { IP = p.Server, Port = p.Port }).ToList();
+                    List<HttpParse> httpParses = httpData.Select(p => new HttpParse { IP = p.Server, Port = p.Port, Version = p.Version, Date = p.Date }).ToList();
+                    List<HttpParse> socks5Parses = socks5Data.Select(p => new HttpParse { IP = p.Server, Port = p.Port, Version = p.Version, Date = p.Date }).ToList();
                     List<MtProtoParse> MTProtoParses = mtProtoData.Select(p => new MtProtoParse
-                    { ServerKey = p.Server, PortKey = p.Port, SecretKey = p.Secret ?? string.Empty }).ToList();
+                    { ServerKey = p.Server, PortKey = p.Port, SecretKey = p.Secret ?? string.Empty, Version = p.Version, Date = p.Date }).ToList();
 
                     cacheHttp.Cache(httpParses);
                     cacheMtpRoto.Cache(MTProtoParses);
+                    cacheSocks5.Cache(socks5Parses);
 
-                    WarningAndInfoLog.LogInfo($"✅ Кэш обновлён: HTTP {httpParses.Count}, MTProto {MTProtoParses.Count}", _logger);
-                    await serviceNewLog.SaveLog($"Кэш обновлён: HTTP {httpParses.Count}, MTProto {MTProtoParses.Count}", DateTime.UtcNow.ToString());
+                    WarningAndInfoLog.LogInfo($"✅ Кэш обновлён: HTTP {httpParses.Count}, MTProto {MTProtoParses.Count}, SOCKS5 {socks5Parses.Count}", _logger);
+                    await serviceNewLog.SaveLog($"Кэш обновлён: HTTP {httpParses.Count}, MTProto {MTProtoParses.Count}, SOCKS5 {socks5Parses.Count}", DateTime.UtcNow.ToString());
                 }
                 catch (Exception ex)
                 {
