@@ -157,24 +157,24 @@ namespace ProxyTG_HTTP.Cache
             }
         }
 
-        public List<CheckedSocks5> GetTestSocks5_2()
+        public List<HttpParse> GetTestSocks5_2()
         {
             try
             {
-                if (_memorycache.TryGetValue(cache_key_tested2, out List<CheckedSocks5> cached) && cached != null)
+                if (_memorycache.TryGetValue(cache_key_tested2, out CheckedSocks5? cached) && cached != null)
                 {
-                    return cached;
+                    return cached.Proxies;
                 }
                 else
                 {
-                    WarningAndInfoLog.LogWarning("🆘 Нет ни fresh, ни stale SOCKS5 данных", _logger);
-                    return new List<CheckedSocks5>();
+                    WarningAndInfoLog.LogWarning("🆘 Нет TCP-проверенных SOCKS5 данных", _logger);
+                    return new List<HttpParse>();
                 }
             }
             catch (Exception ex)
             {
                 ExceptionLog.LogError(ex, _logger);
-                return new List<CheckedSocks5>();
+                return new List<HttpParse>();
             }
         }
     }

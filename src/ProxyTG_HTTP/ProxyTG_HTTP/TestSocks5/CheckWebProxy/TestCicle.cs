@@ -2,6 +2,7 @@
 using ProxyTG_HTTP.Cache;
 using ProxyTG_HTTP.ModelData.ParseData;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -26,28 +27,30 @@ namespace ProxyTG_HTTP.TestSocks5.CheckWebProxy
         public async Task TestMethod()
         {
             await _semaphoreSlim.WaitAsync().ConfigureAwait(false);
+            using var cts = new CancellationTokenSource();
             try
             {
-                List<HttpParse> listProxy = _memoryCacheSocks5List.Get();
-                List<HttpParse> lsitProxyTested = new List<HttpParse>();
+                IEnumerable<HttpParse> listProxy = _memoryCacheSocks5List.Get();
+                ConcurrentBag<HttpParse> lsitProxyTested = new ConcurrentBag<HttpParse>();
 
-                if (listProxy != null && listProxy.Count != 0)
+                if (listProxy != null)
                 {
-                    foreach (var item in listProxy)
-                    {
-                        var result = await _testSocks5WebProxy.TestProxy(item).ConfigureAwait(false);
-
-                        if (result == true)
+                     await Parallel.ForEachAsync<HttpParse>(listProxy,
+                        new ParallelOptions
                         {
-                            lsitProxyTested.Add(item);
-                        }
-                        else
+                            MaxDegreeOfParallelism = 10, 
+                            CancellationToken = cts.Token
+                        },
+                        async (proxy, token) =>
                         {
-                            continue;
-                        }
-                    }
+                            bool result = await _testSocks5WebProxy.TestProxy(proxy, token).ConfigureAwait(false);
+                            if (result)
+                            {
+                                lsitProxyTested.Add(proxy);
+                            }
+                        });
 
-                    _memoryCacheSocks5List.CacheTested(lsitProxyTested);
+                    _memoryCacheSocks5List.CacheTested(lsitProxyTested.ToList());
                 }
                 else
                 {

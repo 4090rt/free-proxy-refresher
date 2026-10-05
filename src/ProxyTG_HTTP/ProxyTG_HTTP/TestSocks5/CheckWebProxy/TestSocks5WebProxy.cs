@@ -25,7 +25,7 @@ namespace ProxyTG_HTTP.TestSocks5.CheckWebProxy
             _testUrl = config.Logging.TestProxyUrl.Url;
         }
 
-        public async Task<bool> TestProxy(HttpParse httpParse)
+        public async Task<bool> TestProxy(HttpParse httpParse, CancellationToken cancellationToken)
         {
             try
             {
@@ -37,7 +37,8 @@ namespace ProxyTG_HTTP.TestSocks5.CheckWebProxy
 
                 using var clienthttp = _client.TestClient(httpParse);
 
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(10));
 
                 using HttpResponseMessage responseMessage = await clienthttp
                     .GetAsync(_testUrl, HttpCompletionOption.ResponseHeadersRead, cts.Token)
