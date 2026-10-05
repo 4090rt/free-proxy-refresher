@@ -110,7 +110,7 @@ namespace ProxyTG_HTTP.Controller
         {
             try
             {
-                // не null: SimpleW не умеет сериализовать null-возврат и отдаёт 500
+
                 CheckedSocks5 tested = _memorySocks5List.GetTestedEntry() ?? new CheckedSocks5();
 
                 if (tested.Proxies.Count == 0)
@@ -132,9 +132,6 @@ namespace ProxyTG_HTTP.Controller
         [Route("GET", "/SOCKS5_Check")]
         public Task<string> CheckSocks5()
         {
-            // Проверка идёт в фоне: SimpleW рвёт сессию примерно через 30 секунд,
-            // а последовательный цикл на сотни прокси дольше. Клиент только запускает,
-            // результат забирает отдельным запросом /SOCKS5_Tested.
             if (_testCicle.IsRunning)
             {
                 WarningAndInfoLog.LogWarning("Запрос /SOCKS5_Check: проверка уже идёт, повторный запуск проигнорирован", _logger);
