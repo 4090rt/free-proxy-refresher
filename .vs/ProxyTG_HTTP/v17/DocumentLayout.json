@@ -1,0 +1,130 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\\u043F\u0440\u0433\u0430\u0433\u0440\u0430\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0435\\ProxyTG_HTTP\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|c:\\\u043F\u0440\u0433\u0430\u0433\u0440\u0430\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0435\\proxytg_http\\proxytg_http\\testsocks5\\checkwebproxy\\testcicle.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|solutionrelative:proxytg_http\\testsocks5\\checkwebproxy\\testcicle.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|c:\\\u043F\u0440\u0433\u0430\u0433\u0440\u0430\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0435\\proxytg_http\\proxytg_http\\cache\\memorycachesocks5list.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|solutionrelative:proxytg_http\\cache\\memorycachesocks5list.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|c:\\\u043F\u0440\u0433\u0430\u0433\u0440\u0430\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0435\\proxytg_http\\proxytg_http\\testsocks5\\checkwebproxy\\testsocks5webproxy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|solutionrelative:proxytg_http\\testsocks5\\checkwebproxy\\testsocks5webproxy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|c:\\\u043F\u0440\u0433\u0430\u0433\u0440\u0430\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0435\\proxytg_http\\proxytg_http\\controller\\controllergetallproxy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|solutionrelative:proxytg_http\\controller\\controllergetallproxy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 276,
+          "SelectedChildIndex": 10,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{74946827-37a0-11d2-a273-00c04f8ef4ff}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:2:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ControllerGetAllProxy.cs",
+              "DocumentMoniker": "C:\\\u043F\u0440\u0433\u0430\u0433\u0440\u0430\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0435\\ProxyTG_HTTP\\ProxyTG_HTTP\\Controller\\ControllerGetAllProxy.cs",
+              "RelativeDocumentMoniker": "ProxyTG_HTTP\\Controller\\ControllerGetAllProxy.cs",
+              "ToolTip": "C:\\\u043F\u0440\u0433\u0430\u0433\u0440\u0430\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0435\\ProxyTG_HTTP\\ProxyTG_HTTP\\Controller\\ControllerGetAllProxy.cs",
+              "RelativeToolTip": "ProxyTG_HTTP\\Controller\\ControllerGetAllProxy.cs",
+              "ViewState": "AgIAAG0AAAAAAAAAAAAcwJMAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-01T15:49:06.014Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MemoryCacheSocks5List.cs",
+              "DocumentMoniker": "C:\\\u043F\u0440\u0433\u0430\u0433\u0440\u0430\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0435\\ProxyTG_HTTP\\ProxyTG_HTTP\\Cache\\MemoryCacheSocks5List.cs",
+              "RelativeDocumentMoniker": "ProxyTG_HTTP\\Cache\\MemoryCacheSocks5List.cs",
+              "ToolTip": "C:\\\u043F\u0440\u0433\u0430\u0433\u0440\u0430\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0435\\ProxyTG_HTTP\\ProxyTG_HTTP\\Cache\\MemoryCacheSocks5List.cs",
+              "RelativeToolTip": "ProxyTG_HTTP\\Cache\\MemoryCacheSocks5List.cs",
+              "ViewState": "AgIAAGsAAAAAAAAAAAAIwJAAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-01T15:37:02.059Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "TestCicle.cs",
+              "DocumentMoniker": "C:\\\u043F\u0440\u0433\u0430\u0433\u0440\u0430\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0435\\ProxyTG_HTTP\\ProxyTG_HTTP\\TestSocks5\\CheckWebProxy\\TestCicle.cs",
+              "RelativeDocumentMoniker": "ProxyTG_HTTP\\TestSocks5\\CheckWebProxy\\TestCicle.cs",
+              "ToolTip": "C:\\\u043F\u0440\u0433\u0430\u0433\u0440\u0430\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0435\\ProxyTG_HTTP\\ProxyTG_HTTP\\TestSocks5\\CheckWebProxy\\TestCicle.cs",
+              "RelativeToolTip": "ProxyTG_HTTP\\TestSocks5\\CheckWebProxy\\TestCicle.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAgwB8AAAA1AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-01T15:26:28.486Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "TestSocks5WebProxy.cs",
+              "DocumentMoniker": "C:\\\u043F\u0440\u0433\u0430\u0433\u0440\u0430\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0435\\ProxyTG_HTTP\\ProxyTG_HTTP\\TestSocks5\\CheckWebProxy\\TestSocks5WebProxy.cs",
+              "RelativeDocumentMoniker": "ProxyTG_HTTP\\TestSocks5\\CheckWebProxy\\TestSocks5WebProxy.cs",
+              "ToolTip": "C:\\\u043F\u0440\u0433\u0430\u0433\u0440\u0430\u043C\u0435\u0440\u043E\u0432\u0430\u043D\u0438\u0435\\ProxyTG_HTTP\\ProxyTG_HTTP\\TestSocks5\\CheckWebProxy\\TestSocks5WebProxy.cs",
+              "RelativeToolTip": "ProxyTG_HTTP\\TestSocks5\\CheckWebProxy\\TestSocks5WebProxy.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAADYAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-01T11:57:50.2Z",
+              "EditorCaption": ""
+            }
+          ]
+        },
+        {
+          "DockedWidth": 260,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

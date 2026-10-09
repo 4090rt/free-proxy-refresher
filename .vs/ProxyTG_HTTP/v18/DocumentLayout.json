@@ -1,0 +1,168 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|c:\\users\\artem\\onedrive\\\u0440\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\proxytg_http\\proxytg_http\\testsocks5\\testsocks5webproxy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|solutionrelative:proxytg_http\\testsocks5\\testsocks5webproxy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|c:\\users\\artem\\onedrive\\\u0440\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\proxytg_http\\proxytg_http\\testsocks5\\testsocksclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|solutionrelative:proxytg_http\\testsocks5\\testsocksclient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|c:\\users\\artem\\onedrive\\\u0440\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\proxytg_http\\proxytg_http\\testsocks5\\testsocs5.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|solutionrelative:proxytg_http\\testsocks5\\testsocs5.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|c:\\users\\artem\\onedrive\\\u0440\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\proxytg_http\\proxytg_http\\modeldata\\parsedata\\httpparse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|solutionrelative:proxytg_http\\modeldata\\parsedata\\httpparse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|c:\\users\\artem\\onedrive\\\u0440\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\proxytg_http\\proxytg_http\\proxytg_http.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|solutionrelative:proxytg_http\\proxytg_http.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|c:\\users\\artem\\onedrive\\\u0440\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\proxytg_http\\proxytg_http\\parser\\proxylineparser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|solutionrelative:proxytg_http\\parser\\proxylineparser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|c:\\users\\artem\\onedrive\\\u0440\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\proxytg_http\\proxytg_http\\parser\\parsesocks5.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|solutionrelative:proxytg_http\\parser\\parsesocks5.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|c:\\users\\artem\\onedrive\\\u0440\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\proxytg_http\\proxytg_http\\parser\\parsemtproto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|solutionrelative:proxytg_http\\parser\\parsemtproto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|c:\\users\\artem\\onedrive\\\u0440\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\proxytg_http\\proxytg_http\\parser\\parsehttp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5A5189A1-4079-4525-A654-62C8FE632D67}|ProxyTG_HTTP\\ProxyTG_HTTP.csproj|solutionrelative:proxytg_http\\parser\\parsehttp.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "TestSocksClient.cs",
+              "DocumentMoniker": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\TestSocks5\\TestSocksClient.cs",
+              "RelativeDocumentMoniker": "ProxyTG_HTTP\\TestSocks5\\TestSocksClient.cs",
+              "ToolTip": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\TestSocks5\\TestSocksClient.cs",
+              "RelativeToolTip": "ProxyTG_HTTP\\TestSocks5\\TestSocksClient.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAEoAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-30T09:57:09.701Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "TestSocks5WebProxy.cs",
+              "DocumentMoniker": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\TestSocks5\\TestSocks5WebProxy.cs",
+              "RelativeDocumentMoniker": "ProxyTG_HTTP\\TestSocks5\\TestSocks5WebProxy.cs",
+              "ToolTip": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\TestSocks5\\TestSocks5WebProxy.cs",
+              "RelativeToolTip": "ProxyTG_HTTP\\TestSocks5\\TestSocks5WebProxy.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAxwB8AAABMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-30T09:43:36.35Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "HttpParse.cs",
+              "DocumentMoniker": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\ModelData\\ParseData\\HttpParse.cs",
+              "RelativeDocumentMoniker": "ProxyTG_HTTP\\ModelData\\ParseData\\HttpParse.cs",
+              "ToolTip": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\ModelData\\ParseData\\HttpParse.cs",
+              "RelativeToolTip": "ProxyTG_HTTP\\ModelData\\ParseData\\HttpParse.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-28T10:37:08.031Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "TestSocs5.cs",
+              "DocumentMoniker": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\TestSocks5\\TestSocs5.cs",
+              "RelativeDocumentMoniker": "ProxyTG_HTTP\\TestSocks5\\TestSocs5.cs",
+              "ToolTip": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\TestSocks5\\TestSocs5.cs",
+              "RelativeToolTip": "ProxyTG_HTTP\\TestSocks5\\TestSocs5.cs",
+              "ViewState": "AgIAAEAAAAAAAAAAAAAkwFIAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-28T10:26:01.406Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ProxyTG_HTTP.csproj",
+              "DocumentMoniker": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\ProxyTG_HTTP.csproj",
+              "RelativeDocumentMoniker": "ProxyTG_HTTP\\ProxyTG_HTTP.csproj",
+              "ToolTip": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\ProxyTG_HTTP.csproj",
+              "RelativeToolTip": "ProxyTG_HTTP\\ProxyTG_HTTP.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAABVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-09-28T09:56:11.211Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ProxyLineParser.cs",
+              "DocumentMoniker": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\Parser\\ProxyLineParser.cs",
+              "RelativeDocumentMoniker": "ProxyTG_HTTP\\Parser\\ProxyLineParser.cs",
+              "ToolTip": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\Parser\\ProxyLineParser.cs",
+              "RelativeToolTip": "ProxyTG_HTTP\\Parser\\ProxyLineParser.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAgwDMAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-28T09:59:32.498Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "ParseSocks5.cs",
+              "DocumentMoniker": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\Parser\\ParseSocks5.cs",
+              "RelativeDocumentMoniker": "ProxyTG_HTTP\\Parser\\ParseSocks5.cs",
+              "ToolTip": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\Parser\\ParseSocks5.cs",
+              "RelativeToolTip": "ProxyTG_HTTP\\Parser\\ParseSocks5.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-28T09:59:28.705Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ParseMTProto.cs",
+              "DocumentMoniker": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\Parser\\ParseMTProto.cs",
+              "RelativeDocumentMoniker": "ProxyTG_HTTP\\Parser\\ParseMTProto.cs",
+              "ToolTip": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\Parser\\ParseMTProto.cs",
+              "RelativeToolTip": "ProxyTG_HTTP\\Parser\\ParseMTProto.cs",
+              "ViewState": "AgIAACIAAAAAAAAAAAAkwEMAAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-28T09:56:23.944Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ParseHttp.cs",
+              "DocumentMoniker": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\Parser\\ParseHttp.cs",
+              "RelativeDocumentMoniker": "ProxyTG_HTTP\\Parser\\ParseHttp.cs",
+              "ToolTip": "C:\\Users\\artem\\OneDrive\\\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B\\fork\\ProxyTG_HTTP\\ProxyTG_HTTP\\Parser\\ParseHttp.cs",
+              "RelativeToolTip": "ProxyTG_HTTP\\Parser\\ParseHttp.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-28T09:56:19.352Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
