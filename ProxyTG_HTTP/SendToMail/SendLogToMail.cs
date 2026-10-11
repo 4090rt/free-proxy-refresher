@@ -43,30 +43,26 @@ namespace ProxyTG_HTTP.SendToMail
             string? strategy = persejson.Logging.StrategyMailKit.Strategy;
             try
             {
-                _logger.LogInformation($"Отправка логов на почту через стратегию: {strategy}");
+                // _logger.LogInformation($"Отправка логов на почту через стратегию: {strategy}");
                 await _logSave.SaveLog($"Отправка логов на почту через стратегию: {strategy}", DateTime.UtcNow.ToString());
 
                 var resultinBd = await _allLogsRequest.AllLogs().ConfigureAwait(false);
 
                 if (resultinBd.Count != 0)
                 {
-                    string fullpath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, persejson.Logging.PDFilepath.PathPDF);
+                    string fullpath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, persejson.Logging.PdfSaveFilePath.FAILEPATH);
 
-                    bool pdfCreated = _createFile.CreatePdfWithTwoColumns(resultinBd, fullpath);
-                    if (pdfCreated)
-                        _logger.LogInformation($"PDF сформирован: {fullpath}");
-                    else
-                        _logger.LogWarning("PDF не создан, письмо уйдёт без вложения");
+                    _createFile.CreatePdfWithTwoColumns(resultinBd, fullpath);
 
                     var sendStrategy = FactoryClass.MethodFactory(strategy, _mailKitClient, _mailKitClientyan);
                     await sendStrategy.Strategy(resultinBd, fullpath).ConfigureAwait(false);
 
-                    _logger.LogInformation("Запрос на отправку логов на почту выполнен");
+                    // _logger.LogInformation("Запрос на отправку логов на почту выполнен");
                     await _logSave.SaveLog("Запрос на отправку логов на почту выполнен", DateTime.UtcNow.ToString());
                 }
                 else
                 {
-                    _logger.LogWarning("Нет логов за текущую сессию, отправка пропущена");
+                    // _logger.LogWarning("Нет логов за текущую сессию, отправка пропущена");
                     await _logSave.SaveLog("Нет логов за текущую сессию, отправка пропущена", DateTime.UtcNow.ToString());
                 }
             }

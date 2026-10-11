@@ -57,7 +57,7 @@ namespace ProxyTG_HTTP.DataBase.CreateTable
 
                     if (exec)
                     {
-                        _logger.LogInformation("Локальная база данных инициализирована: таблица LogBase создана");
+                        // _logger.LogInformation("Локальная база данных инициализирована: таблица LogBase создана");
                         await _logSave.SaveLog("Локальная база данных инициализирована: таблица LogBase создана", DateTime.UtcNow.ToString());
                     }
 

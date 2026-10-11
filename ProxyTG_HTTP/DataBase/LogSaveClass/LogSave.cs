@@ -46,7 +46,7 @@ namespace ProxyTG_HTTP.DataBase.LogSaveClass
 
                 if (result)
                 {
-                    _logger.LogInformation("Успешно сохранено");
+                    // _logger.LogInformation("Успешно сохранено");
                 }
                 else
                 {

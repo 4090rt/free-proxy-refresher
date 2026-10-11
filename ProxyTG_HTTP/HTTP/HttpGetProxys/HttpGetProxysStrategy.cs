@@ -46,7 +46,7 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
                 if (mtProtoParses.Count == 0)
                     return new List<ProxyData>();
 
-                _logger.LogInformation($"Распознано MTProto прокси: {mtProtoParses.Count}");
+                // _logger.LogInformation($"Распознано MTProto прокси: {mtProtoParses.Count}");
                 await _logSave.SaveLog($"Распознано MTProto прокси: {mtProtoParses.Count}", DateTime.UtcNow.ToString());
 
                 return mtProtoParses;
@@ -54,48 +54,6 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
             catch (Exception ex)
             {
                 ExceptionLog.LogError(ex, _logger);
-                return new List<ProxyData>();
-            }
-        }
-    }
-
-    public class RequestHttp : HttpGetProxysStrategy
-    {
-        public readonly GetProxys _getProxys;
-        public readonly ParseHttp _parseHttp;
-        public readonly ILogger<RequestHttp> _logger;
-        public readonly LogSave _logSave;
-
-        public RequestHttp(GetProxys getProxys, ParseHttp parseHttp, ILogger<RequestHttp> logger, LogSave logSave)
-        {
-            _getProxys = getProxys;
-            _parseHttp = parseHttp;
-            _logger = logger;
-            _logSave = logSave;
-        }
-
-        public async Task<List<ProxyData>> RequestInProxys(string client)
-        {
-            try
-            {
-                ReadOnlyMemory<byte> readOnlyMemory = await _getProxys.GetMethod(client).ConfigureAwait(false);
-
-                if (readOnlyMemory.Length == 0)
-                    return new List<ProxyData>();
-
-                List<ProxyData> parseHttps = _parseHttp.ParseMethod(readOnlyMemory);
-
-                if (parseHttps.Count == 0)
-                    return new List<ProxyData>();
-
-                _logger.LogInformation($"Распознано HTTP прокси: {parseHttps.Count}");
-                await _logSave.SaveLog($"Распознано HTTP прокси: {parseHttps.Count}", DateTime.UtcNow.ToString());
-
-                return parseHttps;
-            }
-            catch (Exception ex)
-            {
-                ExceptionLog.LogError(ex,_logger);
                 return new List<ProxyData>();
             }
         }
@@ -130,7 +88,7 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
                 if (socks5.Count == 0)
                     return new List<ProxyData>();
 
-                _logger.LogInformation($"Распознано SOCKS5 прокси: {socks5.Count}");
+                // _logger.LogInformation($"Распознано SOCKS5 прокси: {socks5.Count}");
                 await _logSave.SaveLog($"Распознано SOCKS5 прокси: {socks5.Count}", DateTime.UtcNow.ToString());
 
                 return socks5;

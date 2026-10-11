@@ -49,7 +49,7 @@ namespace ProxyTG_HTTP.DataBase.LogRetention
 
                 await sQLiteTransaction.CommitAsync().ConfigureAwait(false);
 
-                _logger.LogInformation($"Очистка логов старше {day} дн.: удалено {result} записей");
+                // _logger.LogInformation($"Очистка логов старше {day} дн.: удалено {result} записей");
                 await _logSave.SaveLog($"Очистка логов старше {day} дн.: удалено {result} записей", DateTime.UtcNow.ToString());
 
                 return result >= 0;
@@ -64,7 +64,7 @@ namespace ProxyTG_HTTP.DataBase.LogRetention
                         sQLiteTransaction.Connection.State == System.Data.ConnectionState.Open)
                     {
                         await sQLiteTransaction.RollbackAsync().ConfigureAwait(false);
-                        _logger.LogInformation("Транзакция успешно откачена");
+                        // _logger.LogInformation("Транзакция успешно откачена");
                         return false;
                     }
                     else
@@ -87,7 +87,7 @@ namespace ProxyTG_HTTP.DataBase.LogRetention
                         sQLiteTransaction.Connection.State == System.Data.ConnectionState.Open)
                     {
                         await sQLiteTransaction.RollbackAsync().ConfigureAwait(false);
-                        _logger.LogInformation("Транзакция успешно откачена");
+                        // _logger.LogInformation("Транзакция успешно откачена");
                         return false;
                     }
                     else
@@ -111,7 +111,7 @@ namespace ProxyTG_HTTP.DataBase.LogRetention
                         sQLiteTransaction.Connection.State == System.Data.ConnectionState.Open)
                     {
                         await sQLiteTransaction.RollbackAsync().ConfigureAwait(false);
-                        _logger.LogInformation("Транзакция успешно откачена");
+                        // _logger.LogInformation("Транзакция успешно откачена");
                         return false;
                     }
                     else

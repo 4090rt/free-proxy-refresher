@@ -40,7 +40,7 @@ namespace ProxyTG_HTTP.TestSocks5.CheckWebProxy
                     Polly.Timeout.TimeoutStrategy.Pessimistic,
                     onTimeoutAsync: async (context, timespan, task) =>
                     {
-                        _logger.LogWarning($"⏰ Request timed out after {timespan} from Client_1" + DateTime.UtcNow);
+                        // _logger.LogWarning($"⏰ Request timed out after {timespan} from Client_1" + DateTime.UtcNow);
                         await Task.CompletedTask;
                     });
 

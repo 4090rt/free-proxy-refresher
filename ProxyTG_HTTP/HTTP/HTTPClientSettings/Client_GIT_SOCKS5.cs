@@ -36,7 +36,7 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                     Polly.Timeout.TimeoutStrategy.Pessimistic,
                     onTimeoutAsync: (context, timespan, task) =>
                     {
-                        _logger.LogWarning($"⏰ Request timed out after {timespan} from Client_GIT_SOCKS5" + DateTime.UtcNow);
+                        // _logger.LogWarning($"⏰ Request timed out after {timespan} from Client_GIT_SOCKS5" + DateTime.UtcNow);
                         return Task.CompletedTask;
                     }));
                 clientBuilder.AddTransientHttpErrorPolicy(polly => polly.CircuitBreakerAsync(
@@ -44,22 +44,22 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                     durationOfBreak: TimeSpan.FromMinutes(1),
                     onHalfOpen: () =>
                     {
-                        WarningAndInfoLog.LogInfo("Cистема CircuitBreaker SOCKS5: half-open", _logger);
+                        // WarningAndInfoLog.LogInfo("Cистема CircuitBreaker SOCKS5: half-open", _logger);
                     },
                     onBreak: (outcome, timespan) =>
                     {
-                        WarningAndInfoLog.LogWarning($"Cистема CircuitBreaker SOCKS5: circuit opened for {timespan}", _logger);
+                        // WarningAndInfoLog.LogWarning($"Cистема CircuitBreaker SOCKS5: circuit opened for {timespan}", _logger);
                     },
                     onReset: () =>
                     {
-                        WarningAndInfoLog.LogInfo("Cистема CircuitBreaker SOCKS5: circuit reset", _logger);
+                        // WarningAndInfoLog.LogInfo("Cистема CircuitBreaker SOCKS5: circuit reset", _logger);
                     }));
                 clientBuilder.AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(3, retrycount =>
                     TimeSpan.FromSeconds(Math.Pow(2, retrycount)) +
                     TimeSpan.FromMilliseconds(Random.Shared.Next(0, 100)),
                     onRetry: (outcome, timespan, retrycount, context) =>
                     {
-                        WarningAndInfoLog.LogWarning($"Повтор запроса SOCKS5 #{retrycount} через {timespan}", _logger);
+                        // WarningAndInfoLog.LogWarning($"Повтор запроса SOCKS5 #{retrycount} через {timespan}", _logger);
                     }));
                 clientBuilder.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler()
                 {

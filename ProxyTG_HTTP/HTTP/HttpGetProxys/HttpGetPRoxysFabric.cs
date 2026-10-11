@@ -29,23 +29,6 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
         }
     }
 
-    public class HttpClient_Git_Http: HttpGetPRoxysFabric
-    {
-        public RequestHttp _requestHttp;
-
-        public HttpClient_Git_Http(RequestHttp requestMTProto) => _requestHttp = requestMTProto;
-
-        public async Task<List<ProxyData>> HttpClients()
-        {
-            var client = "Client_GIT_HTTP";
-
-            StrategyClass strategyClass = new StrategyClass(_requestHttp);
-            List<ProxyData>  list = await strategyClass.MainMethod(client).ConfigureAwait(false);
-
-            return list;
-        }
-    }
-
     public class HttpClient_Git_Socks5 : HttpGetPRoxysFabric
     {
         public RequestSocks5 _requestSocks5;
@@ -65,13 +48,11 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
 
     public class Fabric_GIT
     {
-        public RequestHttp _requestHttp;
         public RequestMTProto _requestMTProto;
         public RequestSocks5 _requestSocks5;
 
-        public Fabric_GIT(RequestHttp requestHttp, RequestMTProto requestMTProto, RequestSocks5 requestSocks5)
+        public Fabric_GIT(RequestMTProto requestMTProto, RequestSocks5 requestSocks5)
         { 
-            _requestHttp = requestHttp;
             _requestMTProto = requestMTProto;
             _requestSocks5 = requestSocks5;
         }
@@ -81,7 +62,6 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
             return type_client.ToLower() switch
             {
                 "mtproto" => new HttpClient_Git_MTProto(_requestMTProto),
-                "http" => new HttpClient_Git_Http(_requestHttp),
                 "socks5" => new HttpClient_Git_Socks5(_requestSocks5),
                 _ => throw new ArgumentException($"Неизвестный тип прокси: {type_client}")
             };

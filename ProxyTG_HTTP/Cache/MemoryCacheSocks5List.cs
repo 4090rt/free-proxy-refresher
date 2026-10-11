@@ -13,9 +13,9 @@ namespace ProxyTG_HTTP.Cache
         private readonly ILogger<MemoryCacheSocks5List> _logger;
         private readonly IMemoryCache _memorycache;
 
-        public string cache_key = "Socks5Cache_key";
-        public string staleCachekey = "Socks5Cache_key_stale";
-        public string cache_key_tested = "Socks5Cache_key_tested";
+        public const string cache_key = "Socks5Cache_key";
+        public const string staleCachekey = "Socks5Cache_key_stale";
+        public const string cache_key_tested = "Socks5Cache_key_tested";
 
         public MemoryCacheSocks5List(ILogger<MemoryCacheSocks5List> logger, IMemoryCache memorycache)
         {
@@ -41,11 +41,11 @@ namespace ProxyTG_HTTP.Cache
 
                     _memorycache.Set(staleCachekey, parseSocks5, staleoptions);
 
-                    WarningAndInfoLog.LogInfo($"✅ SOCKS5-кэш обновлён: {parseSocks5.Count} прокси", _logger);
+                    // WarningAndInfoLog.LogInfo($"✅ SOCKS5-кэш обновлён: {parseSocks5.Count} прокси", _logger);
                 }
                 else
                 {
-                    WarningAndInfoLog.LogWarning("Результат запроса SOCKS5 пуст, кэш не обновлён", _logger);
+                    // WarningAndInfoLog.LogWarning("Результат запроса SOCKS5 пуст, кэш не обновлён", _logger);
                 }
             }
             catch (Exception ex)
@@ -54,23 +54,23 @@ namespace ProxyTG_HTTP.Cache
             }
         }
 
-        public List<HttpParse> Get()
+        public IReadOnlyList<HttpParse> Get()
         {
             try
             {
                 if (_memorycache.TryGetValue(cache_key, out List<HttpParse>? fresh) && fresh != null)
                 {
-                    WarningAndInfoLog.LogInfo($"Отдаю fresh SOCKS5-кэш: {fresh.Count} прокси", _logger);
-                    return fresh;
+                    // WarningAndInfoLog.LogInfo($"Отдаю fresh SOCKS5-кэш: {fresh.Count} прокси", _logger);
+                    return fresh.AsReadOnly();
                 }
 
                 if (_memorycache.TryGetValue(staleCachekey, out List<HttpParse>? stale) && stale != null)
                 {
-                    WarningAndInfoLog.LogWarning($"Fresh SOCKS5 пуст, отдаю stale: {stale.Count} прокси", _logger);
-                    return stale;
+                    // WarningAndInfoLog.LogWarning($"Fresh SOCKS5 пуст, отдаю stale: {stale.Count} прокси", _logger);
+                    return stale.AsReadOnly();
                 }
-                WarningAndInfoLog.LogWarning("🆘 Нет ни fresh, ни stale SOCKS5 данных", _logger);
-                return new List<HttpParse>();
+                // WarningAndInfoLog.LogWarning("🆘 Нет ни fresh, ни stale SOCKS5 данных", _logger);
+                return new List<HttpParse>().AsReadOnly();
             }
             catch (Exception ex)
             {
@@ -83,24 +83,27 @@ namespace ProxyTG_HTTP.Cache
         {
             try
             {
-                if (parseTested != null && parseTested.Count != 0)
+                if (parseTested == null)
                 {
-                    var entry = new CheckedSocks5
-                    {
-                        Proxies = parseTested,
-                        CheckedAtUtc = DateTime.UtcNow
-                    };
-
-                    var options = new MemoryCacheEntryOptions()
-                        .SetAbsoluteExpiration(TimeSpan.FromHours(3));
-
-                    _memorycache.Set(cache_key_tested, entry, options);
-                    WarningAndInfoLog.LogInfo($"✅ SOCKS5-кэш тестированный обновлён: {parseTested.Count} прокси работают, проверка {entry.CheckedAtUtc}", _logger);
+                    _logger.LogWarning("список прокси не найден");
+                    // WarningAndInfoLog.LogWarning("Результат проверки SOCKS5 пуст, кэш не обновлён", _logger);
+                    return;
                 }
-                else
+
+                if (parseTested.Count == 0)
+                    _logger.LogWarning("Проверка завершена: живых прокси 0");
+
+                var entry = new CheckedSocks5
                 {
-                    WarningAndInfoLog.LogWarning("Результат проверки SOCKS5 пуст, кэш не обновлён", _logger);
-                }
+                    Proxies = parseTested,
+                    CheckedAtUtc = DateTime.UtcNow
+                };
+
+                var options = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromHours(13));
+
+                _memorycache.Set(cache_key_tested, entry, options);
+                // WarningAndInfoLog.LogInfo($"✅ SOCKS5-кэш тестированный обновлён: {parseTested.Count} прокси работают, проверка {entry.CheckedAtUtc}", _logger);
             }
             catch (Exception ex)
             {
@@ -108,24 +111,6 @@ namespace ProxyTG_HTTP.Cache
             }
         }
 
-        public List<HttpParse> GetTested()
-        {
-            try
-            {
-                if (TryGetTestedEntry(out CheckedSocks5? cached) && cached != null)
-                {
-                    WarningAndInfoLog.LogInfo($"Отдаю Socks5 тестированные прокси: {cached.Proxies.Count} прокси, проверка {cached.CheckedAtUtc}", _logger);
-                    return cached.Proxies;
-                }
-                WarningAndInfoLog.LogWarning("🆘 Нет тестированных SOCKS5 данных", _logger);
-                return new List<HttpParse>();
-            }
-            catch (Exception ex)
-            {
-                ExceptionLog.LogError(ex, _logger);
-                return new List<HttpParse>();
-            }
-        }
 
         public CheckedSocks5? GetTestedEntry()
         {

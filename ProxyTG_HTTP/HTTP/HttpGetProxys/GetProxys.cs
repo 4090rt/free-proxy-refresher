@@ -29,7 +29,7 @@ namespace ProxyTG_HTTP.HTTP.HttpGet
                 if (string.IsNullOrEmpty(clientHttp))
                     return new ReadOnlyMemory<byte>();
 
-                _logger.LogInformation($"Загрузка списка прокси от {clientHttp}");
+                // _logger.LogInformation($"Загрузка списка прокси от {clientHttp}");
                 await _logSave.SaveLog($"Загрузка списка прокси от {clientHttp}", DateTime.UtcNow.ToString());
 
                 var client = _httpClientFactory.CreateClient(clientHttp);
@@ -43,23 +43,16 @@ namespace ProxyTG_HTTP.HTTP.HttpGet
                     if (readOnlyMemory.IsEmpty)
                         return new ReadOnlyMemory<byte>();
 
-                    _logger.LogInformation($"Получен список прокси от {clientHttp}: {readOnlyMemory.Length} байт");
+                    // _logger.LogInformation($"Получен список прокси от {clientHttp}: {readOnlyMemory.Length} байт");
                     await _logSave.SaveLog($"Получен список прокси от {clientHttp}: {readOnlyMemory.Length} байт", DateTime.UtcNow.ToString());
 
                     return readOnlyMemory;
                 }
                 else
                 {
-                    ReadOnlyMemory<byte> readOnlyMemory = await
-                         responseMessage.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-
-                    _logger.LogWarning($"Не удалось получить прокси от {clientHttp}: статус {responseMessage.StatusCode}");
+                    // _logger.LogWarning($"Не удалось получить прокси от {clientHttp}: статус {responseMessage.StatusCode}");
                     await _logSave.SaveLog($"Не удалось получить прокси от {clientHttp}: статус {responseMessage.StatusCode}", DateTime.UtcNow.ToString());
-
-                    if (readOnlyMemory.IsEmpty)
-                        return new ReadOnlyMemory<byte>();
-
-                    return readOnlyMemory;
+                    return new ReadOnlyMemory<byte>();
                 }
 
             }

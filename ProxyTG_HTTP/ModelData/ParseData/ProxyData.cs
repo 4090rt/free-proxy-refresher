@@ -8,7 +8,6 @@ namespace ProxyTG_HTTP.ModelData.ParseData
 {
     public enum ProxyType
     {
-        Http,
         MTProto,
         Socks5
     }

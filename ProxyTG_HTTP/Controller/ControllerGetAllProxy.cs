@@ -1,150 +1,68 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ProxyTG_HTTP.Cache;
 using ProxyTG_HTTP.ExceptionBase;
-using ProxyTG_HTTP.ExceptionBase.LogInfoANDLogWarn;
+using ProxyTG_HTTP.ModelData.ControllerStatsModel;
 using ProxyTG_HTTP.ModelData.ParseData;
-using ProxyTG_HTTP.TestSocks5.CheckWebProxy;
 using SimpleW;
 
 namespace ProxyTG_HTTP.Controller
 {
     [Route("/proxy")]
-    public class ControllerGetAllProxy: SimpleW.Controller 
+    public class ControllerGetAllProxy : SimpleW.Controller
     {
         public static IServiceProvider Services = default!;
 
         private readonly ILogger<ControllerGetAllProxy> _logger;
-        private readonly MemoryCacheHttpList _memoryCacheHttpList;
         private readonly MemoryCacheMTProtoList _memoryMTProtoList;
         private readonly MemoryCacheSocks5List _memorySocks5List;
-        private readonly TestCicle _testCicle;
 
         public ControllerGetAllProxy()
         {
             _logger = Services.GetRequiredService<ILogger<ControllerGetAllProxy>>();
-            _memoryCacheHttpList = Services.GetRequiredService<MemoryCacheHttpList>();
             _memoryMTProtoList = Services.GetRequiredService<MemoryCacheMTProtoList>();
             _memorySocks5List = Services.GetRequiredService<MemoryCacheSocks5List>();
-            _testCicle = Services.GetRequiredService<TestCicle>();
         }
 
         [Route("GET", "/MTPROTO")]
-        public Task<List<MtProtoParse>> GetMTProto()
+        public Task<IReadOnlyList<MtProtoParse>> GetMTProto()
         {
             try
             {
-                List<MtProtoParse> list = _memoryMTProtoList.Get();
-
-                if (list == null || list.Count == 0)
-                {
-                    WarningAndInfoLog.LogWarning("Запрос /MTPROTO: кэш пуст", _logger);
-                    return Task.FromResult(new List<MtProtoParse>());
-                }
-
-                WarningAndInfoLog.LogInfo($"Запрос /MTPROTO: отдано {list.Count} прокси", _logger);
-                return Task.FromResult(list);
+                return Task.FromResult(_memoryMTProtoList.Get());
             }
             catch (Exception ex)
             {
                 ExceptionLog.LogError(ex, _logger);
-                return Task.FromResult(new List<MtProtoParse>());
-            }
-        }
-
-        [Route("GET", "/HTTP")]
-        public Task<List<HttpParse>> GetHTTP()
-        {
-            try
-            {
-                List<HttpParse> list = _memoryCacheHttpList.Get();
-
-                if (list == null || list.Count == 0)
-                {
-                    WarningAndInfoLog.LogWarning("Запрос /HTTP: кэш пуст", _logger);
-                    return Task.FromResult(new List<HttpParse>());
-                }
-
-                WarningAndInfoLog.LogInfo($"Запрос /HTTP: отдано {list.Count} прокси", _logger);
-                return Task.FromResult(list);
-            }
-            catch (Exception ex)
-            {
-                ExceptionLog.LogError(ex, _logger);
-                return Task.FromResult(new List<HttpParse>());
+                return Task.FromResult<IReadOnlyList<MtProtoParse>>(Array.Empty<MtProtoParse>());
             }
         }
 
         [Route("GET", "/SOCKS5")]
-        public Task<List<HttpParse>> GetSocks5()
+        public Task<IReadOnlyList<HttpParse>> GetSocks5()
         {
             try
             {
-                List<HttpParse> list = _memorySocks5List.Get();
+                CheckedSocks5? checkedSocks = _memorySocks5List.GetTestedEntry();
 
-                if (list == null || list.Count == 0)
+                if (checkedSocks != null)
                 {
-                    WarningAndInfoLog.LogWarning("Запрос /SOCKS5: кэш пуст", _logger);
-                    return Task.FromResult(new List<HttpParse>());
+                    if (checkedSocks.Proxies.Count == 0)
+                        _logger.LogWarning("Отдаю пустой список");
+
+                    return Task.FromResult(checkedSocks.Proxies);
                 }
 
-                WarningAndInfoLog.LogInfo($"Запрос /SOCKS5: отдано {list.Count} прокси", _logger);
-                return Task.FromResult(list);
+                return Task.FromResult(_memorySocks5List.Get());
             }
             catch (Exception ex)
             {
                 ExceptionLog.LogError(ex, _logger);
-                return Task.FromResult(new List<HttpParse>());
+                return Task.FromResult<IReadOnlyList<HttpParse>>(Array.Empty<HttpParse>());
             }
-        }
-
-        [Route("GET", "/SOCKS5_Tested")]
-        public Task<CheckedSocks5> GetSocjs5Test()
-        {
-            try
-            {
-                // не null: SimpleW не умеет сериализовать null-возврат и отдаёт 500
-                CheckedSocks5 tested = _memorySocks5List.GetTestedEntry() ?? new CheckedSocks5();
-
-                if (tested.Proxies.Count == 0)
-                {
-                    WarningAndInfoLog.LogWarning("Запрос /SOCKS5_Tested: тестированный кэш пуст", _logger);
-                    return Task.FromResult(tested);
-                }
-
-                WarningAndInfoLog.LogInfo($"Запрос /SOCKS5_Tested: отдано {tested.Proxies.Count} прокси, проверка {tested.CheckedAtUtc}", _logger);
-                return Task.FromResult(tested);
-            }
-            catch (Exception ex)
-            {
-                ExceptionLog.LogError(ex, _logger);
-                return Task.FromResult(new CheckedSocks5());
-            }
-        }
-
-        [Route("GET", "/SOCKS5_Check")]
-        public Task<string> CheckSocks5()
-        {
-            // Проверка идёт в фоне: SimpleW рвёт сессию примерно через 30 секунд,
-            // а последовательный цикл на сотни прокси дольше. Клиент только запускает,
-            // результат забирает отдельным запросом /SOCKS5_Tested.
-            if (_testCicle.IsRunning)
-            {
-                WarningAndInfoLog.LogWarning("Запрос /SOCKS5_Check: проверка уже идёт, повторный запуск проигнорирован", _logger);
-                return Task.FromResult("Проверка уже выполняется, дождитесь завершения");
-            }
-
-            _ = Task.Run(() => _testCicle.TestMethod());
-
-            WarningAndInfoLog.LogInfo("Запрос /SOCKS5_Check: проверка запущена в фоне", _logger);
-            return Task.FromResult("Проверка запущена, результат смотрите в /api/proxy/SOCKS5_Tested");
         }
 
         [Route("GET", "/ALL")]
@@ -152,26 +70,20 @@ namespace ProxyTG_HTTP.Controller
         {
             try
             {
-                List<HttpParse> httpList = _memoryCacheHttpList.Get();
-                List<MtProtoParse> mtProtoList = _memoryMTProtoList.Get();
-                List<HttpParse> socks5List = _memorySocks5List.Get();
+                IReadOnlyList<MtProtoParse> mtProtoList = _memoryMTProtoList.Get();
 
-                if ((httpList == null || httpList.Count == 0) &&
-                    (mtProtoList == null || mtProtoList.Count == 0) &&
-                    (socks5List == null || socks5List.Count == 0))
-                {
-                    WarningAndInfoLog.LogWarning("Запрос /ALL: все кэши пусты", _logger);
-                    return Task.FromResult(new AllStrcut());
-                }
+                CheckedSocks5? checkedSocks5 = _memorySocks5List.GetTestedEntry();
+
+                IReadOnlyList<HttpParse> socks5List = checkedSocks5 != null
+                    ? checkedSocks5.Proxies
+                    : _memorySocks5List.Get();
 
                 var strcut = new AllStrcut
                 {
-                    listHTTP = httpList ?? new List<HttpParse>(),
-                    listMTPRoto = mtProtoList ?? new List<MtProtoParse>(),
-                    listSocks5 = socks5List ?? new List<HttpParse>()
+                    listMTPRoto = mtProtoList,
+                    listSocks5 = socks5List,
                 };
 
-                WarningAndInfoLog.LogInfo($"Запрос /ALL: отдано HTTP {httpList?.Count ?? 0}, MTProto {mtProtoList?.Count ?? 0}, SOCKS5 {socks5List?.Count ?? 0}", _logger);
                 return Task.FromResult(strcut);
             }
             catch (Exception ex)
@@ -181,33 +93,27 @@ namespace ProxyTG_HTTP.Controller
             }
         }
 
-        [Route("GET", "/HTTPandMTProto")]
-        public Task<AllStrcut> All()
+        [Route("GET", "/STATS")]
+        public Task<ControllerStats> StatsProxy()
         {
             try
             {
-                List<HttpParse> httpList = _memoryCacheHttpList.Get();
-                List<MtProtoParse> mtProtoList = _memoryMTProtoList.Get();
+                IReadOnlyList<HttpParse> proxiall = _memorySocks5List.Get();
+                CheckedSocks5 proxytested = _memorySocks5List.GetTestedEntry() ?? new CheckedSocks5();
 
-                if (httpList == null || httpList.Count == 0 || mtProtoList == null || mtProtoList.Count == 0)
+                var resultStats = new ControllerStats()
                 {
-                    WarningAndInfoLog.LogWarning($"Запрос /HTTPandMTProto: HTTP {httpList?.Count ?? 0}, MTProto {mtProtoList?.Count ?? 0}", _logger);
-                    return Task.FromResult(new AllStrcut());
-                }
-
-                var strcut = new AllStrcut
-                {
-                    listHTTP = httpList,
-                    listMTPRoto = mtProtoList
+                    ProxiesAll = proxiall.Count,
+                    ProxiesTested = proxytested.Proxies.Count,
+                    DateTime = proxytested.CheckedAtUtc
                 };
 
-                WarningAndInfoLog.LogInfo($"Запрос /HTTPandMTProto: отдано HTTP {httpList.Count}, MTProto {mtProtoList.Count}", _logger);
-                return Task.FromResult(strcut);
+                return Task.FromResult(resultStats);
             }
             catch (Exception ex)
             {
                 ExceptionLog.LogError(ex, _logger);
-                return Task.FromResult(new AllStrcut());
+                return Task.FromResult(new ControllerStats());
             }
         }
     }

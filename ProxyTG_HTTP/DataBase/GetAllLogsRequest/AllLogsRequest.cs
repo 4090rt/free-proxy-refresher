@@ -57,10 +57,8 @@ namespace ProxyTG_HTTP.DataBase.GetAllLogsRequest
                                 listLogs.Add(data);
                             }
 
-                            _logger.LogInformation($"Выгружено записей из БД: {listLogs.Count}");
+                            // _logger.LogInformation($"Выгружено записей из БД: {listLogs.Count}");
                             await _logSave.SaveLog($"Выгружено записей из БД: {listLogs.Count}", DateTime.UtcNow.ToString());
-
-                            _poolSQLite.ConnectionClose(connection);
                             return listLogs;
                         }
                         else

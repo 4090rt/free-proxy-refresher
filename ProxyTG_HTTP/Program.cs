@@ -19,11 +19,14 @@ using ProxyTG_HTTP.HTTP.HttpGetProxys;
 using ProxyTG_HTTP.HTTP.PingRequest;
 using ProxyTG_HTTP.MailKit;
 using ProxyTG_HTTP.ModelData.JsonDataModels;
+using ProxyTG_HTTP.ModelData.JsonPtoxyTest;
 using ProxyTG_HTTP.ModelData.ParseData;
 using ProxyTG_HTTP.ModelData.PingData;
 using ProxyTG_HTTP.Parser;
 using ProxyTG_HTTP.ReadedJson;
 using ProxyTG_HTTP.SendToMail;
+using ProxyTG_HTTP.TestSocks5;
+using ProxyTG_HTTP.TestSocks5.CheckTcpTunnel;
 using ProxyTG_HTTP.TestSocks5.CheckWebProxy;
 using SimpleW;
 using SimpleW.Observability;
@@ -35,6 +38,10 @@ using static System.Net.WebRequestMethods;
 class Program
 {
     private static Microsoft.Extensions.Logging.ILogger<Program> _logger;
+    public static int _ischekedd = 0;
+    public static CancellationTokenSource? _cts;
+
+
     public static async Task Main(string[] args)
     {
         using var loggerFactory = LoggerFactory.Create(builder =>
@@ -60,7 +67,6 @@ class Program
         servise.AddScoped<DBPathCLass>();
 
         new Client_GIT_MTProto(loggerFactory.CreateLogger<Client_GIT_MTProto>()).Client_SettingsGit(servise);
-        new Client_GIT_HTTP(loggerFactory.CreateLogger<Client_GIT_HTTP>()).Client_SettingsGit_HTTP(servise);
         new Client_GIT_SOCKS5(loggerFactory.CreateLogger<Client_GIT_SOCKS5>()).Client_SettingsGit_SOCKS5(servise);
         new Client_Git_Ping(loggerFactory.CreateLogger<Client_Git_Ping>()).Client_SettingsGit_Ping(servise);
         new Client_Google(loggerFactory.CreateLogger<Client_Google>()).Client_SettingsGoogle(servise);
@@ -72,28 +78,35 @@ class Program
         servise.AddScoped<MailKitClientYandex>();
         servise.AddScoped<AllLogsRequest>();
         servise.AddScoped<MailKitClient>();
-        servise.AddScoped<ParseHttp>();
         servise.AddScoped<ParseSocks5>();
         servise.AddScoped<ParseMTProto>();
         servise.AddScoped<GetProxys>();
         servise.AddScoped<RequestMTProto>();
-        servise.AddScoped<RequestHttp>();
         servise.AddScoped<RequestSocks5>();
         servise.AddScoped<StrategyClass>();
         servise.AddScoped<HttpClient_Git_MTProto>();
-        servise.AddScoped<HttpClient_Git_Http>();
         servise.AddScoped<Fabric_GIT>();
         servise.AddScoped<StrategyGoogle>();
         servise.AddScoped<StrategyYandex>();
         servise.AddScoped<ConsolePing>();
         servise.AddScoped<PingToGit>();
         servise.AddScoped<PingToGoggle>();
-        servise.AddScoped<MemoryCacheHttpList>();
         servise.AddScoped<MemoryCacheMTProtoList>();
         servise.AddScoped<MemoryCacheSocks5List>();
         servise.AddScoped<TestSocksClient>();
         servise.AddScoped<TestSocks5WebProxy>();
         servise.AddScoped<TestCicle>();
+        servise.AddScoped<TestSocs5TunnelCreate>();
+        servise.AddScoped<TestCircle>();
+        servise.AddScoped<UserWebProxy>();
+        servise.AddScoped<UseTcpTunnel>();
+        servise.AddScoped<Strategy_TcpSocks5_Test, UserWebProxy>();
+        servise.AddScoped<StrategyCLassTcp>();
+        servise.AddScoped<MetodWebProxy>();
+        servise.AddScoped<MetodTcpTunnel>();
+        servise.AddScoped<Fabric_TcpSocks5_Test, MetodWebProxy>();
+        servise.AddScoped<ProxyTestFactory>();
+        servise.AddScoped<JsonWriteTcpTests>();
         servise.AddMemoryCache();
 
         var serviceProvider = servise.BuildServiceProvider();
@@ -116,10 +129,10 @@ class Program
         //запуск локального хоста
         await HostRun();
 
-        _logger.LogInformation("Cкрипт запущен");
+        // _logger.LogInformation("Cкрипт запущен");
         await serviceNewLog.SaveLog("Cкрипт запущен", DateTime.UtcNow.ToString());
 
-        _logger.LogInformation("Зависимости и сервисы загружены");
+        // _logger.LogInformation("Зависимости и сервисы загружены");
         await serviceNewLog.SaveLog("Зависимости и сервисы загружены", DateTime.UtcNow.ToString());
 
         // лист команд
@@ -145,6 +158,14 @@ class Program
                     {
                         await SendMail(serviceProvider).ConfigureAwait(false);
                     }
+                    else if (input.ToLower() == "/socks5")
+                    {
+                        await SelectProxyTestMethod(serviceProvider).ConfigureAwait(false);
+                    }
+                    else if (input.ToLower() == "/check")
+                    {
+                        await StartProxyTestMethod(serviceProvider).ConfigureAwait(false);
+                    }
                     else if (input.ToLower() == "/ping")
                     {
                         Task<DataPing> dataPingGit = PingToGitService(serviceProvider);
@@ -161,6 +182,19 @@ class Program
                         pingConsole.PrintPing(list);
                         list.Clear();
                     }
+                    else if (input.ToLower() == "/stop")
+                    {
+                       var running = Volatile.Read(ref _cts);
+                        if (running != null)
+                        {
+                            running.Cancel();
+                            Console.WriteLine("Проверка прокси остановлена");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Проверка прокси не запущена");
+                        }
+                    }
                     else
                     {
                         Console.WriteLine("Неизвестная команда");
@@ -172,9 +206,9 @@ class Program
             {
                 await Task.Delay(Timeout.Infinite, cts.Token);
             }
-            catch (TaskCanceledException ex)
+            catch (TaskCanceledException)
             {
-                _logger.LogWarning("Прогамме успешно завершена!" + ex.Message);
+                // _logger.LogWarning("Программа успешно завершена!");
                 _proxyTimer?.Dispose();
             }
         }
@@ -192,10 +226,10 @@ class Program
         {
             var serviceNewLog = serviceProvider.GetRequiredService<LogSave>();
 
-            _logger.LogInformation("Отправка логов на почту");
+            // _logger.LogInformation("Отправка логов на почту");
             await serviceNewLog.SaveLog("Отправка логов на почту", DateTime.UtcNow.ToString());
 
-            _logger.LogInformation("Выгружаю логи");
+            // _logger.LogInformation("Выгружаю логи");
             await serviceNewLog.SaveLog("Выгружаю логи", DateTime.UtcNow.ToString());
 
             var SendMethod = serviceProvider.GetRequiredService<SendLogToMail>();
@@ -204,6 +238,143 @@ class Program
                 return;
 
             await SendMethod.ToSendMail().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            ExceptionLog.LogError(ex, _logger);
+        }
+    }
+    public static async Task SelectProxyTestMethod(ServiceProvider serviceProvider)
+    {
+        try
+        {
+            var factory = serviceProvider.GetRequiredService<ProxyTestFactory>();
+            var storage = serviceProvider.GetRequiredService<JsonWriteTcpTests>();
+            var logSave = serviceProvider.GetRequiredService<LogSave>();
+
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("            М Е Т О Д   П Р О В Е Р К И");
+            Console.ResetColor();
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("  1");
+            Console.ResetColor();
+            Console.WriteLine("  HTTP — через SocketsHttpHandler, api.ipify.org");
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("  2");
+            Console.ResetColor();
+            Console.WriteLine("  TCP  — SOCKS5 туннель, httpbin.org");
+
+            Console.Write("  Выбор (1/2): ");
+
+            string? input = await Console.In.ReadLineAsync().ConfigureAwait(false);
+
+            if (!int.TryParse(input?.Trim(), out int choice) || choice < 1 || choice > 2)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("  Введено не 1 и не 2 — выбор не изменён");
+                Console.ResetColor();
+                return;
+            }
+
+            string method = choice == 1 ? JsonWriteTcpTests.HttpMethod : JsonWriteTcpTests.TcpMethod;
+
+            await storage.SaveMethod(method).ConfigureAwait(false);
+            await logSave.SaveLog($"Метод проверки SOCKS5 выбран: {method}", DateTime.UtcNow.ToString()).ConfigureAwait(false);
+
+            // читаем выбор обратно из файла: это единственный способ
+            // убедиться, что сохранение реально дошло
+            string savedMethod = (await storage.ReadJsomethod().ConfigureAwait(false)).Method_Socks5_Test;
+
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine($"  Метод сохранён: {savedMethod}");
+            Console.ResetColor();
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError("Выбор метода проверки: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            ExceptionLog.LogError(ex, _logger);
+        }
+    }
+
+    public static async Task StartProxyTestMethod(ServiceProvider serviceProvider)
+    {
+        try
+        {
+            var factory = serviceProvider.GetRequiredService<ProxyTestFactory>();
+            var storage = serviceProvider.GetRequiredService<JsonWriteTcpTests>();
+            var logSave = serviceProvider.GetRequiredService<LogSave>();
+
+            string savedMethod = (await storage.ReadJsomethod().ConfigureAwait(false)).Method_Socks5_Test;
+
+            var tester = factory.FactoryMethod(savedMethod);
+
+            if (Interlocked.CompareExchange(ref _ischekedd, 1, 0) == 1)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("  Проверка уже идёт, дождитесь завершения");
+                Console.ResetColor();
+                return;
+            }
+
+            var ctstok = new CancellationTokenSource();
+            Volatile.Write(ref _cts, ctstok);
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    TesteProxyModelCunt result = await tester.TestFactoryMethod().ConfigureAwait(false);
+                    await PrintCheckResult(result, logSave).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Возникло исключени" + ex.Message + ex.StackTrace);
+                }
+                finally
+                {
+                    Volatile.Write(ref _cts, null);
+                    Interlocked.Exchange(ref _ischekedd, 0);
+                }
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError("Выбор метода проверки: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            ExceptionLog.LogError(ex, _logger);
+        }
+    }
+
+    private static async Task PrintCheckResult(TesteProxyModelCunt result, LogSave logSave)
+    {
+        try
+        {
+            string message;
+
+            if (result.Failed)
+                message = "Проверка прервана с ошибкой, подробности в логе";
+            else if (result.Tested == 0)
+                message = "Нет SOCKS5-прокси для проверки";
+            else if (result.Alive == 0)
+                message = $"Проверено {result.Tested}, рабочих 0 — все прокси мертвы";
+            else
+                message = $"Проверка выполнена: проверено {result.Tested}, рабочих {result.Alive}";
+
+            Console.WriteLine();
+            Console.ForegroundColor = result.Failed ? ConsoleColor.Red
+                : result.Alive > 0 ? ConsoleColor.Green : ConsoleColor.Yellow;
+            Console.WriteLine("  " + message);
+            Console.ResetColor();
+
+            await logSave.SaveLog("Проверка SOCK5: " + message, DateTime.UtcNow.ToString()).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -236,8 +407,17 @@ class Program
 
     public static void CommandList()
     {
-        string line = new string('═', 46);
+        // ширина должна быть больше самого длинного описания,
+        // иначе new string(' ', отрицательное) бросит ArgumentOutOfRangeException
+        int width = 56;
+        string line = new string('═', width);
         string commandName = "  /LogSend";
+        string logsendDesc = "Выгрузить логи за текущую сессию";
+        string pingDesc = "Замер пинга до Git и Google";
+        string socks5Desc = "Выбор метода проверки прокси";
+        string socks5Name = "  /socks5";
+        string checkDesc = "Запустить проверку выбранным методом";
+        string checkName = "  /check";
 
         Console.ForegroundColor = ConsoleColor.DarkCyan;
         Console.WriteLine(line);
@@ -249,23 +429,28 @@ class Program
         Console.WriteLine(line);
         Console.ResetColor();
 
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write(commandName);
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.Write(new string(' ', 46 - commandName.Length - "Выгрузить логи за текущую сессию".Length));
-        Console.ForegroundColor = ConsoleColor.White;
-        Console.WriteLine("Выгрузить логи за текущую сессию");
-
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write("  /ping");
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.Write(new string(' ', 46 - "  /ping".Length - "Замер пинга до Git и Google".Length));
-        Console.ForegroundColor = ConsoleColor.White;
-        Console.WriteLine("Замер пинга до Git и Google");
+        WriteCommand(commandName, logsendDesc, width);
+        WriteCommand("  /ping", pingDesc, width);
+        WriteCommand(socks5Name, socks5Desc, width);
+        WriteCommand(checkName, checkDesc, width);
 
         Console.ForegroundColor = ConsoleColor.DarkCyan;
         Console.WriteLine(line);
         Console.ResetColor();
+    }
+
+    private static void WriteCommand(string name, string description, int width)
+    {
+        int padding = width - name.Length - description.Length;
+        if (padding < 1)
+            padding = 1;
+
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.Write(name);
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.Write(new string(' ', padding));
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine(description);
     }
 
     public static async Task<DataPing> PingToGoogleService(ServiceProvider serviceProvider)
@@ -312,12 +497,11 @@ class Program
 
         var getProxy = serviceProvider.GetRequiredService<Fabric_GIT>();
         var serviceNewLog = serviceProvider.GetRequiredService<LogSave>();
-        var cacheHttp = serviceProvider.GetRequiredService<MemoryCacheHttpList>();
         var cacheMtpRoto = serviceProvider.GetRequiredService<MemoryCacheMTProtoList>();
         var cacheSocks5 = serviceProvider.GetRequiredService<MemoryCacheSocks5List>();
         try
         {
-            WarningAndInfoLog.LogInfo("Запускаю таймер обновления прокси (каждые 12 часов)", _logger);
+            // WarningAndInfoLog.LogInfo("Запускаю таймер обновления прокси (каждые 12 часов)", _logger);
             await serviceNewLog.SaveLog("Запускаю таймер обновления прокси (каждые 12 часов)", DateTime.UtcNow.ToString());
             using var cts = new CancellationTokenSource();
 
@@ -326,40 +510,35 @@ class Program
             {
                 if (Interlocked.Exchange(ref _isRefreshing, 1) == 1)
                 {
-                    WarningAndInfoLog.LogInfo("Обновление уже выполняется, пропускаем тик", _logger);
+                    // WarningAndInfoLog.LogInfo("Обновление уже выполняется, пропускаем тик", _logger);
                     return;
                 }
 
                 try
                 {
                     var mtProtoStrategy = getProxy.HttpGetPRoxysFabric("mtproto");
-                    var httpStrategy = getProxy.HttpGetPRoxysFabric("http");
                     var socks5Strategy = getProxy.HttpGetPRoxysFabric("socks5");
 
                     Task<List<ProxyData>> mtProtoTask = mtProtoStrategy.HttpClients();
-                    Task<List<ProxyData>> httpTask = httpStrategy.HttpClients();
                     Task<List<ProxyData>> socks5Task = socks5Strategy.HttpClients();
 
-                    await Task.WhenAll(mtProtoTask, httpTask, socks5Task).ConfigureAwait(false);
+                    await Task.WhenAll(mtProtoTask, socks5Task).ConfigureAwait(false);
 
                     List<ProxyData> mtProtoData = await mtProtoTask.ConfigureAwait(false);
-                    List<ProxyData> httpData = await httpTask.ConfigureAwait(false);
                     List<ProxyData> socks5Data = await socks5Task.ConfigureAwait(false);
 
-                    WarningAndInfoLog.LogInfo($"Получено прокси: HTTP {httpData.Count}, MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count}", _logger);
-                    await serviceNewLog.SaveLog($"Получено прокси: HTTP {httpData.Count}, MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count}", DateTime.UtcNow.ToString());
+                    // WarningAndInfoLog.LogInfo($"Получено прокси: MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count}", _logger);
+                    await serviceNewLog.SaveLog($"Получено прокси: MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count}", DateTime.UtcNow.ToString());
 
-                    List<HttpParse> httpParses = httpData.Select(p => new HttpParse { IP = p.Server, Port = p.Port, Version = p.Version, Date = p.Date }).ToList();
                     List<HttpParse> socks5Parses = socks5Data.Select(p => new HttpParse { IP = p.Server, Port = p.Port, Version = p.Version, Date = p.Date }).ToList();
                     List<MtProtoParse> MTProtoParses = mtProtoData.Select(p => new MtProtoParse
                     { ServerKey = p.Server, PortKey = p.Port, SecretKey = p.Secret ?? string.Empty, Version = p.Version, Date = p.Date }).ToList();
 
-                    cacheHttp.Cache(httpParses);
                     cacheMtpRoto.Cache(MTProtoParses);
                     cacheSocks5.Cache(socks5Parses);
 
-                    WarningAndInfoLog.LogInfo($"✅ Кэш обновлён: HTTP {httpParses.Count}, MTProto {MTProtoParses.Count}, SOCKS5 {socks5Parses.Count}", _logger);
-                    await serviceNewLog.SaveLog($"Кэш обновлён: HTTP {httpParses.Count}, MTProto {MTProtoParses.Count}, SOCKS5 {socks5Parses.Count}", DateTime.UtcNow.ToString());
+                    // WarningAndInfoLog.LogInfo($"✅ Кэш обновлён: MTProto {MTProtoParses.Count}, SOCKS5 {socks5Parses.Count}", _logger);
+                    await serviceNewLog.SaveLog($"Кэш обновлён: MTProto {MTProtoParses.Count}, SOCKS5 {socks5Parses.Count}", DateTime.UtcNow.ToString());
                 }
                 catch (Exception ex)
                 {

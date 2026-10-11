@@ -30,7 +30,7 @@ namespace ProxyTG_HTTP.HTTP.PingRequest
         {
             try
             {
-                _logger.LogInformation("Замер пинга до Google");
+                // _logger.LogInformation("Замер пинга до Google");
                 await _logSave.SaveLog("Замер пинга до Google", DateTime.UtcNow.ToString());
 
                 HttpClient client = _httpClientFactory.CreateClient("Client_Google");
@@ -49,7 +49,7 @@ namespace ProxyTG_HTTP.HTTP.PingRequest
 
                     var hostgoogle = (await ReadAndDeserializeJson.MethodJson<JsonDatStruct>().ConfigureAwait(false)).Logging.PingToSerivceURL;
 
-                    _logger.LogInformation($"Пинг до Google: {ping} ms, статус {status}");
+                    // _logger.LogInformation($"Пинг до Google: {ping} ms, статус {status}");
                     await _logSave.SaveLog($"Пинг до Google: {ping} ms, статус {status}", DateTime.UtcNow.ToString());
 
                     return new DataPing
@@ -68,7 +68,7 @@ namespace ProxyTG_HTTP.HTTP.PingRequest
 
                     var hostgoogle = (await ReadAndDeserializeJson.MethodJson<JsonDatStruct>().ConfigureAwait(false)).Logging.PingToSerivceURL;
 
-                    _logger.LogWarning($"Пинг до Google: неуспешен, статус {status}");
+                    // _logger.LogWarning($"Пинг до Google: неуспешен, статус {status}");
                     await _logSave.SaveLog($"Пинг до Google: неуспешен, статус {status}", DateTime.UtcNow.ToString());
 
                     return new DataPing

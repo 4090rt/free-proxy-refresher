@@ -39,7 +39,7 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                     Polly.Timeout.TimeoutStrategy.Pessimistic,
                     onTimeoutAsync:(context, timespan, task) =>
                     {
-                        _logger.LogWarning($"⏰ Request timed out after {timespan} from Client_1" + DateTime.UtcNow);
+                        // _logger.LogWarning($"⏰ Request timed out after {timespan} from Client_1" + DateTime.UtcNow);
                         return Task.CompletedTask;
                     }));
                 clientBuilder.AddTransientHttpErrorPolicy(polly => polly.CircuitBreakerAsync
@@ -47,22 +47,22 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                 durationOfBreak: TimeSpan.FromMinutes(1),
                 onHalfOpen: () =>
                 {
-                    _logger.LogWarning("⚠️ Circuit half-open from Client_1" + DateTime.UtcNow);
+                    // _logger.LogWarning("⚠️ Circuit half-open from Client_1" + DateTime.UtcNow);
                 },
                 onBreak: (outcome, timespan) =>
                 {
-                    _logger.LogWarning($"🔌 Circuit opened for {timespan} from Client_1" + DateTime.UtcNow);
+                    // _logger.LogWarning($"🔌 Circuit opened for {timespan} from Client_1" + DateTime.UtcNow);
                 },
                 onReset: () =>
                 {
-                    _logger.LogWarning("✅ Circuit reset from Client_1" + DateTime.UtcNow);
+                    // _logger.LogWarning("✅ Circuit reset from Client_1" + DateTime.UtcNow);
                 }));
                 clientBuilder.AddTransientHttpErrorPolicy(pollicy => pollicy.WaitAndRetryAsync(3, retryCount =>
                 TimeSpan.FromSeconds(Math.Pow(2, retryCount)) +
                 TimeSpan.FromMilliseconds(Random.Shared.Next(0, 100)),
                 onRetryAsync: (outcome, timespan, retrycount, task) =>
                 {
-                    _logger.LogWarning($"⏰ Request timed out after {timespan} from Client_1" + DateTime.UtcNow);
+                    // _logger.LogWarning($"⏰ Request timed out after {timespan} from Client_1" + DateTime.UtcNow);
                     return Task.CompletedTask;
                 }));
                 clientBuilder.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler

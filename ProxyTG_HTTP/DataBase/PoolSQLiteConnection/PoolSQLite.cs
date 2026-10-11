@@ -20,7 +20,8 @@ namespace ProxyTG_HTTP.DataBase.PoolSQLiteConnection
 
         private string _path;
 
-        public PoolSQLite(ILogger<PoolSQLite> logger, DBPathCLass dBPathCLass)        {
+        public PoolSQLite(ILogger<PoolSQLite> logger, DBPathCLass dBPathCLass)
+        {
             _logger = logger;
             _dBPathCLass = dBPathCLass;
             _path = _dBPathCLass.MethodPath();
@@ -73,7 +74,7 @@ namespace ProxyTG_HTTP.DataBase.PoolSQLiteConnection
                             connection = CreateConnection();
                         }
                     }
-                    else if (_aviable?.Count < _maxcountPool)
+                    else if (_aviable?.Count + _InUse.Count < _maxcountPool)
                     {
                         connection = CreateConnection();
                     }

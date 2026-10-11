@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace ProxyTG_HTTP.ModelData.JsonDataModels
 {
-    public struct PDFilepath
+    public struct PdfSaveFilePath
     {
-        public readonly string PathPDF {get;}
+        public string FAILEPATH { get; set; }
     }
 }

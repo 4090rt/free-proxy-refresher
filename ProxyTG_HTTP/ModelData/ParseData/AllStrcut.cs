@@ -8,8 +8,7 @@ namespace ProxyTG_HTTP.ModelData.ParseData
 {
     public struct AllStrcut
     {
-        public List<HttpParse> listHTTP { get; set; }
-        public List<MtProtoParse> listMTPRoto { get; set; }
-        public List<HttpParse> listSocks5 { get; set; }
+        public IReadOnlyList<MtProtoParse> listMTPRoto { get; set; }
+        public IReadOnlyList<HttpParse> listSocks5 { get; set; }
     }
 }

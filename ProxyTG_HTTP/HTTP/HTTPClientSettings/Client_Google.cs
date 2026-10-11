@@ -39,7 +39,7 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                 Polly.Timeout.TimeoutStrategy.Pessimistic,
                 onTimeoutAsync: (context, timespan, task) =>
                 {
-                    WarningAndInfoLog.LogWarning($"Таймаут запроса к Google после {timespan}", _logger);
+                    // WarningAndInfoLog.LogWarning($"Таймаут запроса к Google после {timespan}", _logger);
                     return Task.CompletedTask;
                 }
             ))
@@ -48,22 +48,22 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                 durationOfBreak: TimeSpan.FromMinutes(1),
                 onBreak: (outcome, timespan) =>
                 {
-                    WarningAndInfoLog.LogWarning($"Circuit открыт на {timespan}", _logger);
+                    // WarningAndInfoLog.LogWarning($"Circuit открыт на {timespan}", _logger);
                 },
                 onHalfOpen: () =>
                 {
-                    WarningAndInfoLog.LogInfo("Circuit half-open", _logger);
+                    // WarningAndInfoLog.LogInfo("Circuit half-open", _logger);
                 },
                 onReset: () =>
                 {
-                    WarningAndInfoLog.LogInfo("Circuit reset", _logger);
+                    // WarningAndInfoLog.LogInfo("Circuit reset", _logger);
                 }))
             .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(3, retrycount =>
             TimeSpan.FromSeconds(Math.Pow(2, retrycount)) +
             TimeSpan.FromMilliseconds(Random.Shared.Next(0, 100)),
             onRetry: (outcome, timespan, retrycount, context) =>
             {
-                WarningAndInfoLog.LogWarning($"Повтор запроса к Google #{retrycount} через {timespan}", _logger);
+                // WarningAndInfoLog.LogWarning($"Повтор запроса к Google #{retrycount} через {timespan}", _logger);
             }))
             .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler()
             {

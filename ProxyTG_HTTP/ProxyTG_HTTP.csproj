@@ -5,10 +5,10 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-    <ContainerRuntimeIdentifier>win-x64</ContainerRuntimeIdentifier>
+    <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
+    <ContainerRuntimeIdentifier>linux-x64</ContainerRuntimeIdentifier>
     <EnableSdkContainerDebugging>True</EnableSdkContainerDebugging>
-    <ContainerBaseImage>mcr.microsoft.com/dotnet/runtime:9.0-nanoserver-1809</ContainerBaseImage>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/runtime:9.0</ContainerBaseImage>
     <IsPublishable>True</IsPublishable>
     <EnableSdkContainerSupport>True</EnableSdkContainerSupport>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
@@ -26,7 +26,7 @@
     <PackageReference Include="SimpleW" Version="26.1.0" />
     <PackageReference Include="SQLite" Version="3.53.4" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
-    <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <!--<PackageReference Include="System.Net.Http" Version="4.3.4" />-->
     <PackageReference Include="System.Text.Json" Version="10.0.11" />
 	<None Update="appsettings.json">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -1,8 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using ProxyTG_HTTP.Cache;
+using ProxyTG_HTTP.ModelData.JsonPtoxyTest;
 using ProxyTG_HTTP.ModelData.ParseData;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ProxyTG_HTTP.TestSocks5.CheckWebProxy
@@ -23,42 +26,65 @@ namespace ProxyTG_HTTP.TestSocks5.CheckWebProxy
 
         public bool IsRunning => _semaphoreSlim.CurrentCount == 0;
 
-        public async Task TestMethod()
+        public async Task<TesteProxyModelCunt> TestMethod(CancellationToken token = default)
         {
-            await _semaphoreSlim.WaitAsync().ConfigureAwait(false);
+            await _semaphoreSlim.WaitAsync(token).ConfigureAwait(false);
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(token);
+            int numberProxy = 0;
             try
             {
-                List<HttpParse> listProxy = _memoryCacheSocks5List.Get();
-                List<HttpParse> lsitProxyTested = new List<HttpParse>();
+                TesteProxyModelCunt testeProxyModelCunt = new TesteProxyModelCunt();
+                IReadOnlyList<HttpParse> listProxy = _memoryCacheSocks5List.Get();
+                ConcurrentBag<HttpParse> lsitProxyTested = new ConcurrentBag<HttpParse>();
 
-                if (listProxy != null && listProxy.Count != 0)
+                testeProxyModelCunt.Tested = listProxy.Count;
+
+                if (listProxy.Count != 0)
                 {
-                    foreach (var item in listProxy)
-                    {
-                        var result = await _testSocks5WebProxy.TestProxy(item).ConfigureAwait(false);
+                    await Parallel.ForEachAsync<HttpParse>(listProxy,
+                       new ParallelOptions
+                       {
+                           MaxDegreeOfParallelism = 10,
+                           CancellationToken = cts.Token
+                       },
+                       async (proxy, token) =>
+                       {
+                           int current = Interlocked.Increment(ref numberProxy);
 
-                        if (result == true)
-                        {
-                            lsitProxyTested.Add(item);
-                        }
-                        else
-                        {
-                            continue;
-                        }
-                    }
+                           if (current % 30 == 0)
+                           {
+                               _logger.LogInformation("Tested 30 proxies");
+                           }
 
-                    _memoryCacheSocks5List.CacheTested(lsitProxyTested);
+                           bool result = await _testSocks5WebProxy.TestProxy(proxy, token).ConfigureAwait(false);
+                           if (result)
+                           {
+                               lsitProxyTested.Add(proxy);
+                           }
+                       });
+
+                    _memoryCacheSocks5List.CacheTested(lsitProxyTested.ToList());
+                    testeProxyModelCunt.Alive = lsitProxyTested.Count;
+                    testeProxyModelCunt.Failed = false;
+
+                    _logger.LogInformation("Proxy testing complete. Tested: {Total}, Working: {Working}",
+                     listProxy.Count, lsitProxyTested.Count);
+
+                    return testeProxyModelCunt;
                 }
                 else
                 {
-                    _logger.LogWarning("Полынй список прокси пуст!");
-                    return;
+                    return new TesteProxyModelCunt {Failed = false };
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
                 _logger.LogError("Возникло исключение" + ex.Message + ex.StackTrace);
-                return;
+                return new TesteProxyModelCunt { Failed = true };
             }
             finally
             { 

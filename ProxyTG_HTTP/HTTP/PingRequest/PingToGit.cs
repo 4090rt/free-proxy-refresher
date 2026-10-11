@@ -29,7 +29,7 @@ namespace ProxyTG_HTTP.HTTP.PingRequest
         {
             try
             { 
-                _logger.LogInformation("Замер пинга до GIT");
+                // _logger.LogInformation("Замер пинга до GIT");
                 await _logSave.SaveLog("Замер пинга до GIT", DateTime.UtcNow.ToString());
 
                 HttpClient client = _httpClientFactory.CreateClient("Client_Git_Ping");
@@ -48,7 +48,7 @@ namespace ProxyTG_HTTP.HTTP.PingRequest
 
                     var hostgit = (await ReadAndDeserializeJson.MethodJson<JsonDatStruct>().ConfigureAwait(false)).Logging.PingToSerivceURL;
 
-                    _logger.LogInformation($"Пинг до GIT: {ping} ms, статус {status}");
+                    // _logger.LogInformation($"Пинг до GIT: {ping} ms, статус {status}");
                     await _logSave.SaveLog($"Пинг до GIT: {ping} ms, статус {status}", DateTime.UtcNow.ToString());
 
                     return new DataPing
@@ -67,7 +67,7 @@ namespace ProxyTG_HTTP.HTTP.PingRequest
 
                     var hostgit = (await ReadAndDeserializeJson.MethodJson<JsonDatStruct>().ConfigureAwait(false)).Logging.PingToSerivceURL;
 
-                    _logger.LogWarning($"Пинг до GIT: неуспешен, статус {status}");
+                    // _logger.LogWarning($"Пинг до GIT: неуспешен, статус {status}");
                     await _logSave.SaveLog($"Пинг до GIT: неуспешен, статус {status}", DateTime.UtcNow.ToString());
 
                     return new DataPing
