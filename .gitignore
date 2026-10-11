@@ -1,0 +1,40 @@
+# ── Build output ─────────────────────────────────────────────
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# ── Visual Studio / IDE ──────────────────────────────────────
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ── .NET / NuGet ─────────────────────────────────────────────
+*.nupkg
+project.lock.json
+*.nuget.props
+*.nuget.targets
+
+# ── Runtime artifacts ────────────────────────────────────────
+# SQLite-база логов создаётся в рантайме
+DataBase.db
+*.db
+*.db-shm
+*.db-wal
+# PDF-отчёты из /logsend
+LogsFile/
+*.pdf
+
+# ── OS ───────────────────────────────────────────────────────
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ── Secrets ──────────────────────────────────────────────────
+# appsettings.json остаётся в репозитории как шаблон,
+# но реальные значения StrategyMailKit.Mail/Password/recipientsemail
+# в него не коммитим — держи их локально или через переменные окружения.
