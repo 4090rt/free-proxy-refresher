@@ -28,6 +28,8 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                 client.DefaultRequestHeaders.AcceptEncoding.ParseAdd("zip, deflate, br");
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
 
+                client.Timeout = Timeout.InfiniteTimeSpan;
+
                 var result = ReadAndDeserializeJson.MethodJsonSync<JsonDatStruct>();
                 client.BaseAddress = new Uri(result.Logging.PingToSerivceURL.GIT);
 
@@ -35,11 +37,11 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                 client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
             });
             clientdescript.AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(
-                    TimeSpan.FromMinutes(1),
+                    TimeSpan.FromMinutes(5),
                     Polly.Timeout.TimeoutStrategy.Pessimistic,
                     onTimeoutAsync: (outcome, timespan, task) =>
                     {
-                        // WarningAndInfoLog.LogWarning($"Таймаут запроса пинга после {timespan}", _logger);
+                        WarningAndInfoLog.LogWarning($"Таймаут запроса пинга после {timespan}", _logger);
                         return Task.CompletedTask;
                     }
                 ));
@@ -48,23 +50,31 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                 durationOfBreak: TimeSpan.FromMinutes(1),
                 onBreak: (outcome, timespan) =>
                 {
-                    // WarningAndInfoLog.LogWarning($"Circuit открыт на {timespan}", _logger);
+                    WarningAndInfoLog.LogWarning($"Circuit открыт на {timespan}", _logger);
                 },
                 onHalfOpen: () =>
                 {
-                    // WarningAndInfoLog.LogInfo("Circuit half-open", _logger);
+                    WarningAndInfoLog.LogInfo("Circuit half-open", _logger);
                 },
                 onReset: () =>
                 {
-                    // WarningAndInfoLog.LogInfo("Circuit reset", _logger);
+                    WarningAndInfoLog.LogInfo("Circuit reset", _logger);
                 }));
             clientdescript.AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(3, retrycount =>
             TimeSpan.FromSeconds(Math.Pow(2, retrycount)) +
             TimeSpan.FromMilliseconds(Random.Shared.Next(0, 100)),
             onRetry: (outcome, timespan, retrycount, context) =>
             {
-                // WarningAndInfoLog.LogWarning($"Повтор запроса пинга #{retrycount} через {timespan}", _logger);
+                WarningAndInfoLog.LogWarning($"Повтор запроса пинга #{retrycount} через {timespan}", _logger);
             }));
+            clientdescript.AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(
+                TimeSpan.FromMinutes(5),
+                Polly.Timeout.TimeoutStrategy.Pessimistic,
+                onTimeoutAsync: (context, timespan, task) =>
+                {
+                    _logger.LogWarning($"⏰ тайм-аут отдельной попытки через {timespan}");
+                    return Task.CompletedTask;
+                }));
             clientdescript.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler()
             {
                 EnableMultipleHttp2Connections = true,

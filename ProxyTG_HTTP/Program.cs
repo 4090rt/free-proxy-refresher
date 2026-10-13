@@ -162,6 +162,7 @@ class Program
                     {
                         await SelectProxyTestMethod(serviceProvider).ConfigureAwait(false);
                     }
+
                     else if (input.ToLower() == "/check")
                     {
                         await StartProxyTestMethod(serviceProvider).ConfigureAwait(false);
@@ -407,8 +408,6 @@ class Program
 
     public static void CommandList()
     {
-        // ширина должна быть больше самого длинного описания,
-        // иначе new string(' ', отрицательное) бросит ArgumentOutOfRangeException
         int width = 56;
         string line = new string('═', width);
         string commandName = "  /LogSend";
@@ -527,7 +526,7 @@ class Program
                     List<ProxyData> mtProtoData = await mtProtoTask.ConfigureAwait(false);
                     List<ProxyData> socks5Data = await socks5Task.ConfigureAwait(false);
 
-                    // WarningAndInfoLog.LogInfo($"Получено прокси: MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count}", _logger);
+                    WarningAndInfoLog.LogInfo($"Получено прокси: MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count}", _logger);
                     await serviceNewLog.SaveLog($"Получено прокси: MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count}", DateTime.UtcNow.ToString());
 
                     List<HttpParse> socks5Parses = socks5Data.Select(p => new HttpParse { IP = p.Server, Port = p.Port, Version = p.Version, Date = p.Date }).ToList();
@@ -537,7 +536,7 @@ class Program
                     cacheMtpRoto.Cache(MTProtoParses);
                     cacheSocks5.Cache(socks5Parses);
 
-                    // WarningAndInfoLog.LogInfo($"✅ Кэш обновлён: MTProto {MTProtoParses.Count}, SOCKS5 {socks5Parses.Count}", _logger);
+                    WarningAndInfoLog.LogInfo($"✅ Кэш обновлён: MTProto {MTProtoParses.Count}, SOCKS5 {socks5Parses.Count}", _logger);
                     await serviceNewLog.SaveLog($"Кэш обновлён: MTProto {MTProtoParses.Count}, SOCKS5 {socks5Parses.Count}", DateTime.UtcNow.ToString());
                 }
                 catch (Exception ex)

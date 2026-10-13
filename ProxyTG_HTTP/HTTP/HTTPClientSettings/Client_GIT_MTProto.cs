@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Http.Resilience;
 
 namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
 {
@@ -28,56 +29,34 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                     client.DefaultRequestHeaders.AcceptEncoding.ParseAdd("zip, deflate, br");
                     client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
 
+                    client.Timeout = Timeout.InfiniteTimeSpan;
+
                     var result = ReadAndDeserializeJson.MethodJsonSync<JsonDatStruct>();
                     client.BaseAddress = new Uri(result.Logging.ProxySources.MTProto);
 
                     client.DefaultRequestVersion = HttpVersion.Version20;
                     client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
                 });
-                clientBuilder.AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(
-                    TimeSpan.FromMinutes(1),
-                    Polly.Timeout.TimeoutStrategy.Pessimistic,
-                    onTimeoutAsync:(context, timespan, task) =>
+                clientBuilder.AddResilienceHandler("mtproto", builder =>
+                {
+                    builder.AddTimeout(TimeSpan.FromMinutes(5));
+
+                    builder.AddRetry(new HttpRetryStrategyOptions
                     {
-                        // _logger.LogWarning($"⏰ Request timed out after {timespan} from Client_1" + DateTime.UtcNow);
-                        return Task.CompletedTask;
-                    }));
-                clientBuilder.AddTransientHttpErrorPolicy(polly => polly.CircuitBreakerAsync
-                (handledEventsAllowedBeforeBreaking: 5,
-                durationOfBreak: TimeSpan.FromMinutes(1),
-                onHalfOpen: () =>
-                {
-                    // _logger.LogWarning("⚠️ Circuit half-open from Client_1" + DateTime.UtcNow);
-                },
-                onBreak: (outcome, timespan) =>
-                {
-                    // _logger.LogWarning($"🔌 Circuit opened for {timespan} from Client_1" + DateTime.UtcNow);
-                },
-                onReset: () =>
-                {
-                    // _logger.LogWarning("✅ Circuit reset from Client_1" + DateTime.UtcNow);
-                }));
-                clientBuilder.AddTransientHttpErrorPolicy(pollicy => pollicy.WaitAndRetryAsync(3, retryCount =>
-                TimeSpan.FromSeconds(Math.Pow(2, retryCount)) +
-                TimeSpan.FromMilliseconds(Random.Shared.Next(0, 100)),
-                onRetryAsync: (outcome, timespan, retrycount, task) =>
-                {
-                    // _logger.LogWarning($"⏰ Request timed out after {timespan} from Client_1" + DateTime.UtcNow);
-                    return Task.CompletedTask;
-                }));
-                clientBuilder.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
-                {
-                    EnableMultipleHttp2Connections = true,
+                        MaxRetryAttempts = int.MaxValue, // колво попыток
+                        BackoffType = DelayBackoffType.Exponential, // увелечение хадержек между попытками
+                        Delay = TimeSpan.FromSeconds(1), // задержка
+                        MaxDelay = TimeSpan.FromSeconds(30),// макс задержка
+                        UseJitter = true, // джиттер
+                        OnRetry = args => //лог
+                        {
+                            _logger.LogWarning(
+                                $"🔁 Попытка #{args.AttemptNumber} через {args.RetryDelay}. " +
+                                $"Причина: {args.Outcome.Exception?.Message ?? args.Outcome.Result?.StatusCode.ToString()}");
+                            return ValueTask.CompletedTask;
+                        }
+                    });
 
-                    PooledConnectionIdleTimeout = TimeSpan.FromHours(12),
-                    PooledConnectionLifetime = TimeSpan.FromHours(24),
-
-                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
-
-                    UseCookies = false,
-                    AllowAutoRedirect = true,
-                    MaxAutomaticRedirections = 15,
-                    MaxConnectionsPerServer = 10,
                 });
             }
             catch (Exception ex)

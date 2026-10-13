@@ -6,6 +6,7 @@ using ProxyTG_HTTP.ModelData.JsonDataModels;
 using ProxyTG_HTTP.ReadedJson;
 using System;
 using System.Net;
+using Microsoft.Extensions.Http.Resilience;
 
 namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
 {
@@ -25,42 +26,42 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                     client.DefaultRequestHeaders.AcceptEncoding.ParseAdd("zip, deflate, br");
                     client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
 
+                    client.Timeout = Timeout.InfiniteTimeSpan;
+
                     var result = ReadAndDeserializeJson.MethodJsonSync<JsonDatStruct>();
                     client.BaseAddress = new Uri(result.Logging.ProxySources.Socks5);
 
                     client.DefaultRequestVersion = HttpVersion.Version20;
                     client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;
                 });
-                clientBuilder.AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(
-                    TimeSpan.FromMinutes(1),
-                    Polly.Timeout.TimeoutStrategy.Pessimistic,
-                    onTimeoutAsync: (context, timespan, task) =>
+                clientBuilder.AddResilienceHandler("socks5", builder =>
+                {
+                    builder.AddTimeout(new HttpTimeoutStrategyOptions
                     {
-                        // _logger.LogWarning($"⏰ Request timed out after {timespan} from Client_GIT_SOCKS5" + DateTime.UtcNow);
-                        return Task.CompletedTask;
-                    }));
-                clientBuilder.AddTransientHttpErrorPolicy(polly => polly.CircuitBreakerAsync(
-                    handledEventsAllowedBeforeBreaking: 5,
-                    durationOfBreak: TimeSpan.FromMinutes(1),
-                    onHalfOpen: () =>
+                        Timeout = TimeSpan.FromMinutes(5),
+                        OnTimeout = args =>
+                        {
+                            _logger.LogWarning($"⏰ Таймаут: {args.Timeout}");
+                            return ValueTask.CompletedTask;
+                        }
+                    });
+
+                    builder.AddRetry(new HttpRetryStrategyOptions
                     {
-                        // WarningAndInfoLog.LogInfo("Cистема CircuitBreaker SOCKS5: half-open", _logger);
-                    },
-                    onBreak: (outcome, timespan) =>
-                    {
-                        // WarningAndInfoLog.LogWarning($"Cистема CircuitBreaker SOCKS5: circuit opened for {timespan}", _logger);
-                    },
-                    onReset: () =>
-                    {
-                        // WarningAndInfoLog.LogInfo("Cистема CircuitBreaker SOCKS5: circuit reset", _logger);
-                    }));
-                clientBuilder.AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(3, retrycount =>
-                    TimeSpan.FromSeconds(Math.Pow(2, retrycount)) +
-                    TimeSpan.FromMilliseconds(Random.Shared.Next(0, 100)),
-                    onRetry: (outcome, timespan, retrycount, context) =>
-                    {
-                        // WarningAndInfoLog.LogWarning($"Повтор запроса SOCKS5 #{retrycount} через {timespan}", _logger);
-                    }));
+                        MaxRetryAttempts = 5,
+                        BackoffType = DelayBackoffType.Exponential,
+                        Delay = TimeSpan.FromSeconds(5),
+                        MaxDelay = TimeSpan.FromSeconds(30),
+                        UseJitter = true,
+                        OnRetry = args =>
+                        {
+                            _logger.LogWarning(
+                                 $"🔁 Попытка #{args.AttemptNumber} через {args.RetryDelay}. " +
+                                $"Причина: {args.Outcome.Exception?.Message ?? args.Outcome.Result?.StatusCode.ToString()}");
+                            return ValueTask.CompletedTask;
+                        }
+                    });
+                });
                 clientBuilder.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler()
                 {
                     EnableMultipleHttp2Connections = true,
