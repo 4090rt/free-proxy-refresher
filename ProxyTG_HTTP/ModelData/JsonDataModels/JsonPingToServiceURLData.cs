@@ -10,5 +10,6 @@ namespace ProxyTG_HTTP.ModelData.JsonDataModels
     {
         public string Google { get; set; }
         public string GIT { get; set; }
+        public string Yandex { get; set; }
     }
 }
