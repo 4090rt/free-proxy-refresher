@@ -25,6 +25,7 @@ using ProxyTG_HTTP.ModelData.PingData;
 using ProxyTG_HTTP.Parser;
 using ProxyTG_HTTP.ReadedJson;
 using ProxyTG_HTTP.SendToMail;
+using ProxyTG_HTTP.TestMtproto;
 using ProxyTG_HTTP.TestSocks5;
 using ProxyTG_HTTP.TestSocks5.CheckTcpTunnel;
 using ProxyTG_HTTP.TestSocks5.CheckWebProxy;
@@ -107,6 +108,8 @@ class Program
         servise.AddScoped<Fabric_TcpSocks5_Test, MetodWebProxy>();
         servise.AddScoped<ProxyTestFactory>();
         servise.AddScoped<JsonWriteTcpTests>();
+        servise.AddScoped<TestCircleMtproto>();
+        servise.AddScoped<TestMtprtotoTunnel>();
         servise.AddMemoryCache();
 
         var serviceProvider = servise.BuildServiceProvider();

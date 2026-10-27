@@ -32,6 +32,16 @@ namespace ProxyTG_HTTP.Controller
         {
             try
             {
+                IReadOnlyList<MtProtoParse> mtprotolist = _memoryMTProtoList.GetUpdated();
+
+                if (mtprotolist != null)
+                {
+                    if (mtprotolist.Count == 0)
+                        _logger.LogWarning("Отдаю пустой список");
+
+                    return Task.FromResult(mtprotolist);
+                }
+
                 return Task.FromResult(_memoryMTProtoList.Get());
             }
             catch (Exception ex)
@@ -70,7 +80,11 @@ namespace ProxyTG_HTTP.Controller
         {
             try
             {
-                IReadOnlyList<MtProtoParse> mtProtoList = _memoryMTProtoList.Get();
+                IReadOnlyList<MtProtoParse> mtProtoListcheck = _memoryMTProtoList.GetUpdated();
+
+                IReadOnlyList<MtProtoParse> mtProtoList = mtProtoListcheck != null
+                    ?mtProtoListcheck
+                    : _memoryMTProtoList.Get();
 
                 CheckedSocks5? checkedSocks5 = _memorySocks5List.GetTestedEntry();
 

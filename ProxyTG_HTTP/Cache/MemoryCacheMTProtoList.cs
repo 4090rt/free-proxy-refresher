@@ -19,6 +19,8 @@ namespace ProxyTG_HTTP.Cache
 
         public const string cache_key = "MtpRotoCache_key";
         public const string staleCachekey = "MtpRotoCache_key_stale";
+        public const string cache_keyUpdate = "MtpRotoCache_key";
+        public const string staleCachekeyUpdate = "MtpRotoCache_key_stale";
 
         public MemoryCacheMTProtoList(ILogger<MemoryCacheMTProtoList> logger, IMemoryCache memorycache)
         {
@@ -44,7 +46,7 @@ namespace ProxyTG_HTTP.Cache
 
                     _memorycache.Set(staleCachekey, parseHttps, staleoptions);
 
-                    // WarningAndInfoLog.LogInfo($"✅ MTProto-кэш обновлён: {parseHttps.Count} прокси", _logger);
+                    WarningAndInfoLog.LogInfo($"✅ MTProto-кэш обновлён: {parseHttps.Count} прокси", _logger);
                 }
                 else
                 {
@@ -73,6 +75,49 @@ namespace ProxyTG_HTTP.Cache
                     return stale.AsReadOnly();
                 }
                 // WarningAndInfoLog.LogWarning("🆘 Нет ни fresh, ни stale MTProto данных", _logger);
+                return new List<MtProtoParse>().AsReadOnly();
+            }
+            catch (Exception ex)
+            {
+                ExceptionLog.LogError(ex, _logger);
+                return new List<MtProtoParse>().AsReadOnly();
+            }
+        }
+
+        public void CacheTested(IReadOnlyList<MtProtoParse> testedParses)
+        {
+            try
+            {
+                if (testedParses != null && testedParses.Count != 0)
+                {
+                    var options = new MemoryCacheEntryOptions()
+                        .SetAbsoluteExpiration(TimeSpan.FromHours(13));
+
+                    _memorycache.Set(cache_keyUpdate, testedParses, options);
+
+                    WarningAndInfoLog.LogInfo($"✅ MTProto-кэш обновлён: {testedParses.Count} прокси", _logger);
+                }
+                else
+                {
+                    // WarningAndInfoLog.LogWarning("Результат запроса MTProto пуст, кэш не обновлён", _logger);
+                }
+            }
+            catch (Exception ex)
+            {
+                ExceptionLog.LogError(ex, _logger);
+            }
+        }
+
+        public IReadOnlyList<MtProtoParse> GetUpdated()
+        {
+            try
+            {
+                if (_memorycache.TryGetValue(cache_keyUpdate, out List<MtProtoParse>? updated) && updated != null)
+                {
+                    // WarningAndInfoLog.LogInfo($"Отдаю updated MTProto-кэш: {updated.Count} прокси", _logger);
+                    return updated.AsReadOnly();
+                }
+                // WarningAndInfoLog.LogWarning("🆘 Нет updated MTProto данных", _logger);
                 return new List<MtProtoParse>().AsReadOnly();
             }
             catch (Exception ex)
