@@ -7,15 +7,8 @@ using System.Threading.Tasks;
 
 namespace ProxyTG_HTTP.TestMtproto
 {
-    public class SecretNormalizate
+    public static class SecretNormalizate
     {
-        private readonly ILogger<SecretNormalizate> _logger;
-
-        public SecretNormalizate(ILogger<SecretNormalizate> logger)
-        {
-            _logger = logger;
-        }
-
         public static (byte[] key, string? domain) Normalizate(string secretkey)
         {
             var lowered = secretkey.Trim().ToLowerInvariant();

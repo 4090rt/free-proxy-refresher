@@ -12,7 +12,7 @@ namespace ProxyTG_HTTP.ModelData.ParseData
         [JsonPropertyName("Host")]
         public string? ServerHost { get; set; }
         [JsonPropertyName("Port")]
-        public int? ServerPort { get; set; }
+        public string? ServerPort { get; set; }
         [JsonPropertyName("Method")]
         public string? MethodServer { get; set;}
         [JsonPropertyName("Password")]

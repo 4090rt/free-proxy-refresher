@@ -110,6 +110,9 @@ class Program
         servise.AddScoped<JsonWriteTcpTests>();
         servise.AddScoped<TestCircleMtproto>();
         servise.AddScoped<TestMtprtotoTunnel>();
+        servise.AddScoped<MemoryCacheShadowSoscks>();
+        servise.AddScoped<GetShadowProxy>();
+        servise.AddScoped<ParseShadowSocsk>();
         servise.AddMemoryCache();
 
         var serviceProvider = servise.BuildServiceProvider();
@@ -501,6 +504,10 @@ class Program
         var serviceNewLog = serviceProvider.GetRequiredService<LogSave>();
         var cacheMtpRoto = serviceProvider.GetRequiredService<MemoryCacheMTProtoList>();
         var cacheSocks5 = serviceProvider.GetRequiredService<MemoryCacheSocks5List>();
+        var getShadow = serviceProvider.GetRequiredService<GetShadowProxy>();
+        var cacheShadow = serviceProvider.GetRequiredService<MemoryCacheShadowSoscks>();
+        var parser = serviceProvider.GetRequiredService<ParseShadowSocsk>();
+
         try
         {
             // WarningAndInfoLog.LogInfo("Запускаю таймер обновления прокси (каждые 12 часов)", _logger);
@@ -523,19 +530,23 @@ class Program
 
                     Task<List<ProxyData>> mtProtoTask = mtProtoStrategy.HttpClients();
                     Task<List<ProxyData>> socks5Task = socks5Strategy.HttpClients();
+                    Task<IReadOnlyList<ShadowSocksParseSS>> shadowSocksParses = getShadow.HttpGet(cts.Token);
 
-                    await Task.WhenAll(mtProtoTask, socks5Task).ConfigureAwait(false);
+                    await Task.WhenAll(mtProtoTask, socks5Task, shadowSocksParses).ConfigureAwait(false);
 
                     List<ProxyData> mtProtoData = await mtProtoTask.ConfigureAwait(false);
                     List<ProxyData> socks5Data = await socks5Task.ConfigureAwait(false);
+                    IReadOnlyList<ShadowSocksParseSS> shadowData = await shadowSocksParses.ConfigureAwait(false);
 
-                    WarningAndInfoLog.LogInfo($"Получено прокси: MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count}", _logger);
-                    await serviceNewLog.SaveLog($"Получено прокси: MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count}", DateTime.UtcNow.ToString());
+                    WarningAndInfoLog.LogInfo($"Получено прокси: MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count}, ShadoSocks {shadowData.Count}", _logger);
+                    await serviceNewLog.SaveLog($"Получено прокси: MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count},ShadoSocks {shadowData.Count}", DateTime.UtcNow.ToString());
 
                     List<HttpParse> socks5Parses = socks5Data.Select(p => new HttpParse { IP = p.Server, Port = p.Port, Version = p.Version, Date = p.Date }).ToList();
                     List<MtProtoParse> MTProtoParses = mtProtoData.Select(p => new MtProtoParse
                     { ServerKey = p.Server, PortKey = p.Port, SecretKey = p.Secret ?? string.Empty, Version = p.Version, Date = p.Date }).ToList();
+                    IReadOnlyList<ShadowSocksParse> shadowSocksParses1 = await parser.ParsedMetod(shadowData, cts.Token).ConfigureAwait(false);
 
+                    cacheShadow.Cached(shadowSocksParses1);
                     cacheMtpRoto.Cache(MTProtoParses);
                     cacheSocks5.Cache(socks5Parses);
 
