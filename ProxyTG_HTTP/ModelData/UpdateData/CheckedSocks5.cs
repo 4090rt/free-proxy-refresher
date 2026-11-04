@@ -2,7 +2,7 @@ using ProxyTG_HTTP.ModelData.ParseData;
 using System;
 using System.Collections.Generic;
 
-namespace ProxyTG_HTTP.Cache
+namespace ProxyTG_HTTP.ModelData.UpdateData
 {
     public class CheckedSocks5
     {

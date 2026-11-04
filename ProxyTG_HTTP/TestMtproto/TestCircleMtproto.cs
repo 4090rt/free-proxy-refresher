@@ -26,18 +26,20 @@ namespace ProxyTG_HTTP.TestMtproto
             _testMtprtotoTunnel = testMtprtotoTunnel;
         }
 
-        public async Task<List<MtProtoParse>> CircleMethod(CancellationToken cancellationToken = default)
+        public async Task<TesteProxyModelCunt> CircleMethod(CancellationToken cancellationToken = default)
         {
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false); 
+            int numberproxy = 0;
             try
             {
                 IReadOnlyList<MtProtoParse> mtProtoParses = _memoryCacheMTProtoList.Get();
                 ConcurrentBag<MtProtoParse> mtProtoParseBag = new ConcurrentBag<MtProtoParse>();
+                TesteProxyModelCunt testeProxyModelCunt = new TesteProxyModelCunt();
 
                 if (mtProtoParses.Count == 0)
                 {
-                    return new List<MtProtoParse>();
+                    return new TesteProxyModelCunt();
                 }
 
                 await Parallel.ForEachAsync<MtProtoParse>(mtProtoParses,
@@ -46,17 +48,31 @@ namespace ProxyTG_HTTP.TestMtproto
                         MaxDegreeOfParallelism = 10,
                         CancellationToken = cts.Token
                     },
-                    async (mtprtoxy, cts) =>
+                    async (mtprtoxy, ctsL) =>
                     { 
-                        var result = await _testMtprtotoTunnel.TestMethod(mtprtoxy, cts).ConfigureAwait(false);
+                        testeProxyModelCunt.Tested = mtProtoParses.Count;
 
+                        var current = Interlocked.Increment(ref numberproxy);
+
+                        var result = await _testMtprtotoTunnel.TestMethod(mtprtoxy, ctsL).ConfigureAwait(false);
+
+                        if (current % 30 == 0)
+                        {
+                            _logger.LogInformation("Tested 30 proxies");
+                        }
                         if (result)
                         {
                             mtProtoParseBag.Add(mtprtoxy);
                         }
                     });
+                testeProxyModelCunt.Alive = mtProtoParseBag.Count;
+                testeProxyModelCunt.Failed = false;
                 _memoryCacheMTProtoList.CacheTested(mtProtoParseBag.ToList());
-                return mtProtoParseBag.ToList();
+
+                _logger.LogInformation("Proxy testing complete. Tested: {Total}, Working: {Working}",
+                    mtProtoParses.Count, mtProtoParseBag.Count);
+
+                return testeProxyModelCunt;
             }
             catch (OperationCanceledException ex)
             {
@@ -65,7 +81,7 @@ namespace ProxyTG_HTTP.TestMtproto
             catch (Exception ex)
             {
                 _logger.LogError("Возникло исключение" + ex.Message + ex.StackTrace);
-                return new List<MtProtoParse>();
+                return new TesteProxyModelCunt();
             }
             finally
             { 

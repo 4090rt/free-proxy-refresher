@@ -18,13 +18,12 @@ namespace ProxyTG_HTTP.TestMtproto
         public async Task<bool> TestMethod(MtProtoParse mtProtoParse, CancellationToken cancellationTokenSource)
         {
             byte[] buf = _arrayPool.Rent(1024);
-            TcpClient? tcp = null;
+            using TcpClient? tcp = new TcpClient();
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokenSource);
             cts.CancelAfter(TimeSpan.FromSeconds(5));
 
             try
-            {
-                tcp = new TcpClient();
+            { 
                 await tcp.ConnectAsync(mtProtoParse.ServerKey, int.Parse(mtProtoParse.PortKey), cts.Token);
                 tcp.NoDelay = true;
 
@@ -66,7 +65,7 @@ namespace ProxyTG_HTTP.TestMtproto
                 if (err < 0)
                     return true;
 
-                return true;
+                return false;
             }
             catch (OperationCanceledException) when (cancellationTokenSource.IsCancellationRequested)
             {

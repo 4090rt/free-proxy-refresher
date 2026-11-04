@@ -7,6 +7,7 @@ using ProxyTG_HTTP.Cache;
 using ProxyTG_HTTP.ExceptionBase;
 using ProxyTG_HTTP.ModelData.ControllerStatsModel;
 using ProxyTG_HTTP.ModelData.ParseData;
+using ProxyTG_HTTP.ModelData.UpdateData;
 using SimpleW;
 
 namespace ProxyTG_HTTP.Controller
@@ -32,14 +33,17 @@ namespace ProxyTG_HTTP.Controller
         {
             try
             {
-                IReadOnlyList<MtProtoParse> mtprotolist = _memoryMTProtoList.GetUpdated();
+                ChekedMtproto mtprotolist = _memoryMTProtoList.GetUpdated();
 
                 if (mtprotolist != null)
                 {
-                    if (mtprotolist.Count == 0)
-                        _logger.LogWarning("Отдаю пустой список");
+                    if (mtprotolist.Proxies.Count == 0)
+                    {
+                        _logger.LogWarning("Отдаю  cырой  список");
+                        return Task.FromResult(_memoryMTProtoList.Get());
+                    }
 
-                    return Task.FromResult(mtprotolist);
+                    return Task.FromResult(mtprotolist.Proxies);
                 }
 
                 return Task.FromResult(_memoryMTProtoList.Get());
@@ -61,7 +65,10 @@ namespace ProxyTG_HTTP.Controller
                 if (checkedSocks != null)
                 {
                     if (checkedSocks.Proxies.Count == 0)
-                        _logger.LogWarning("Отдаю пустой список");
+                    {
+                        _logger.LogWarning("Отдаю cырой список");
+                        return Task.FromResult(_memorySocks5List.Get());
+                    }
 
                     return Task.FromResult(checkedSocks.Proxies);
                 }
@@ -80,15 +87,16 @@ namespace ProxyTG_HTTP.Controller
         {
             try
             {
-                IReadOnlyList<MtProtoParse> mtProtoListcheck = _memoryMTProtoList.GetUpdated();
+                ChekedMtproto mtProtoListcheck = _memoryMTProtoList.GetUpdated();
 
-                IReadOnlyList<MtProtoParse> mtProtoList = mtProtoListcheck != null
-                    ?mtProtoListcheck
+                IReadOnlyList<MtProtoParse> mtProtoList =
+                    mtProtoListcheck != null && mtProtoListcheck.Proxies.Count > 0
+                    ? mtProtoListcheck.Proxies
                     : _memoryMTProtoList.Get();
 
-                CheckedSocks5? checkedSocks5 = _memorySocks5List.GetTestedEntry();
+                CheckedSocks5 ? checkedSocks5 = _memorySocks5List.GetTestedEntry();
 
-                IReadOnlyList<HttpParse> socks5List = checkedSocks5 != null
+                IReadOnlyList<HttpParse> socks5List = checkedSocks5 != null && checkedSocks5.Proxies.Count > 0
                     ? checkedSocks5.Proxies
                     : _memorySocks5List.Get();
 
@@ -108,26 +116,39 @@ namespace ProxyTG_HTTP.Controller
         }
 
         [Route("GET", "/STATS")]
-        public Task<ControllerStats> StatsProxy()
+        public Task<List<ControllerStats>> StatsProxy()
         {
+            List<ControllerStats> controllerStats = new List<ControllerStats>();
             try
             {
                 IReadOnlyList<HttpParse> proxiall = _memorySocks5List.Get();
                 CheckedSocks5 proxytested = _memorySocks5List.GetTestedEntry() ?? new CheckedSocks5();
 
-                var resultStats = new ControllerStats()
+                IReadOnlyList<MtProtoParse> mtprotoall = _memoryMTProtoList.Get();
+                ChekedMtproto mtprototested = _memoryMTProtoList.GetUpdated() ?? new ChekedMtproto();
+
+                var resultStatsSocks5 = new ControllerStats()
                 {
                     ProxiesAll = proxiall.Count,
                     ProxiesTested = proxytested.Proxies.Count,
                     DateTime = proxytested.CheckedAtUtc
                 };
+                controllerStats.Add(resultStatsSocks5);
 
-                return Task.FromResult(resultStats);
+                var resultStatsMTproto = new ControllerStats()
+                {
+                    ProxiesAll = mtprotoall.Count,
+                    ProxiesTested = mtprototested.Proxies.Count,
+                    DateTime = mtprototested.CheckedAtUtc
+                };
+                controllerStats.Add(resultStatsMTproto);
+
+                return Task.FromResult(controllerStats);
             }
             catch (Exception ex)
             {
                 ExceptionLog.LogError(ex, _logger);
-                return Task.FromResult(new ControllerStats());
+                return Task.FromResult(controllerStats);
             }
         }
     }

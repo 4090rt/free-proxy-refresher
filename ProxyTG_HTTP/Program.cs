@@ -26,6 +26,7 @@ using ProxyTG_HTTP.Parser;
 using ProxyTG_HTTP.ReadedJson;
 using ProxyTG_HTTP.SendToMail;
 using ProxyTG_HTTP.TestMtproto;
+using ProxyTG_HTTP.TestShadowsocks;
 using ProxyTG_HTTP.TestSocks5;
 using ProxyTG_HTTP.TestSocks5.CheckTcpTunnel;
 using ProxyTG_HTTP.TestSocks5.CheckWebProxy;
@@ -39,7 +40,9 @@ using static System.Net.WebRequestMethods;
 class Program
 {
     private static Microsoft.Extensions.Logging.ILogger<Program> _logger;
-    public static int _ischekedd = 0;
+    public static int _ischekedSocks5 = 0;
+    public static int _ischekedMtproto = 0;
+    public static int _ischekedShadowSocks = 0;
     public static CancellationTokenSource? _cts;
 
 
@@ -171,7 +174,9 @@ class Program
 
                     else if (input.ToLower() == "/check")
                     {
-                        await StartProxyTestMethod(serviceProvider).ConfigureAwait(false);
+                        await StartProxyTestMethod(serviceProvider, cts).ConfigureAwait(false);
+                        await StartShadowSocksTestMethod(serviceProvider, cts).ConfigureAwait(false);
+                        await StartMTProxyTestMethod(serviceProvider, cts).ConfigureAwait(false);
                     }
                     else if (input.ToLower() == "/ping")
                     {
@@ -309,7 +314,7 @@ class Program
         }
     }
 
-    public static async Task StartProxyTestMethod(ServiceProvider serviceProvider)
+    public static async Task StartProxyTestMethod(ServiceProvider serviceProvider, CancellationTokenSource cancellationTokenSource)
     {
         try
         {
@@ -321,7 +326,7 @@ class Program
 
             var tester = factory.FactoryMethod(savedMethod);
 
-            if (Interlocked.CompareExchange(ref _ischekedd, 1, 0) == 1)
+            if (Interlocked.CompareExchange(ref _ischekedSocks5, 1, 0) == 1)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("  Проверка уже идёт, дождитесь завершения");
@@ -329,15 +334,14 @@ class Program
                 return;
             }
 
-            var ctstok = new CancellationTokenSource();
-            Volatile.Write(ref _cts, ctstok);
+            Volatile.Write(ref _cts, cancellationTokenSource);
 
             _ = Task.Run(async () =>
             {
                 try
                 {
                     TesteProxyModelCunt result = await tester.TestFactoryMethod().ConfigureAwait(false);
-                    await PrintCheckResult(result, logSave).ConfigureAwait(false);
+                    await PrintCheckResult(result, logSave, "SOCKS5").ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -346,7 +350,7 @@ class Program
                 finally
                 {
                     Volatile.Write(ref _cts, null);
-                    Interlocked.Exchange(ref _ischekedd, 0);
+                    Interlocked.Exchange(ref _ischekedSocks5, 0);
                 }
             });
         }
@@ -360,7 +364,116 @@ class Program
         }
     }
 
-    private static async Task PrintCheckResult(TesteProxyModelCunt result, LogSave logSave)
+    public static async Task StartShadowSocksTestMethod(ServiceProvider serviceProvider, CancellationTokenSource cancellationTokenSource)
+    {
+        try
+        {
+            var tester = serviceProvider.GetRequiredService<TestCircleShadow>();
+            var logsave = serviceProvider.GetRequiredService<LogSave>();
+
+            if (Interlocked.CompareExchange(ref _ischekedShadowSocks, 1, 0) == 1)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("  Проверка уже идёт, дождитесь завершения");
+                Console.ResetColor();
+                return;
+            }
+
+            Volatile.Write(ref _cts, cancellationTokenSource);
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    TesteProxyModelCunt result = await tester.CircleMethod(cancellationTokenSource.Token).ConfigureAwait(false);
+
+                    if (result.Alive == 0 || result.Tested == 0)
+                    {
+                        _logger.LogError("Ошибка при получении результата проверки ShadowSocks");
+                    }
+                    await PrintCheckResult(result, logsave, "ShadowSocks").ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Выбор метода проверки: " + ex.Message);
+                }
+                finally
+                {
+                    Volatile.Write(ref _cts, null);
+                    Interlocked.Exchange(ref _ischekedShadowSocks, 0);
+                }
+            });
+
+        }
+        catch (OperationCanceledException ex) when (cancellationTokenSource.Token.IsCancellationRequested)
+        {
+            _logger.LogWarning("Проверка ShadowSocks прервана пользователем");
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            ExceptionLog.LogError(ex, _logger);
+        }
+    }
+
+    public static async Task StartMTProxyTestMethod(ServiceProvider serviceProvider, CancellationTokenSource cancellationTokenSource)
+    {
+        try
+        {
+            var logSave = serviceProvider.GetRequiredService<LogSave>();
+            var tester = serviceProvider.GetRequiredService<TestCircleMtproto>();
+
+            if (Interlocked.CompareExchange(ref _ischekedMtproto, 1, 0) == 1)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("  Проверка уже идёт, дождитесь завершения");
+                Console.ResetColor();
+                return;
+            }
+
+            Volatile.Write(ref _cts, cancellationTokenSource);
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    TesteProxyModelCunt testeProxyModelCunt = await tester.CircleMethod(cancellationTokenSource.Token).ConfigureAwait(false);
+
+                    if (testeProxyModelCunt.Alive == 0 || testeProxyModelCunt.Tested == 0)
+                    {
+                        _logger.LogError("Ошибка при получении результата проверки MTProto");
+                    }
+                    await PrintCheckResult(testeProxyModelCunt, logSave, "MTProto").ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                        _logger.LogError("Выбор метода проверки: " + ex.Message);
+                }
+                finally
+                {
+                    Volatile.Write(ref _cts, null);
+                    Interlocked.Exchange(ref _ischekedMtproto, 0);
+                }
+            });
+        }
+        catch(OperationCanceledException ex) when (cancellationTokenSource.Token.IsCancellationRequested)
+        {
+            _logger.LogWarning("Проверка MTProto прервана пользователем");
+        }
+        catch(InvalidOperationException ex)
+        {
+            _logger.LogError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            ExceptionLog.LogError(ex, _logger);
+        }
+    }
+
+    private static async Task PrintCheckResult(TesteProxyModelCunt result, LogSave logSave, string protocol)
     {
         try
         {
@@ -369,7 +482,7 @@ class Program
             if (result.Failed)
                 message = "Проверка прервана с ошибкой, подробности в логе";
             else if (result.Tested == 0)
-                message = "Нет SOCKS5-прокси для проверки";
+                message = "Нет " + protocol + "-прокси для проверки";
             else if (result.Alive == 0)
                 message = $"Проверено {result.Tested}, рабочих 0 — все прокси мертвы";
             else
@@ -381,7 +494,7 @@ class Program
             Console.WriteLine("  " + message);
             Console.ResetColor();
 
-            await logSave.SaveLog("Проверка SOCK5: " + message, DateTime.UtcNow.ToString()).ConfigureAwait(false);
+            await logSave.SaveLog("Проверка " + protocol + ": " + message, DateTime.UtcNow.ToString()).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -547,8 +660,8 @@ class Program
                     IReadOnlyList<ShadowSocksParse> shadowSocksParses1 = await parser.ParsedMetod(shadowData, cts.Token).ConfigureAwait(false);
 
                     cacheShadow.Cached(shadowSocksParses1);
-                    cacheMtpRoto.Cache(MTProtoParses);
-                    cacheSocks5.Cache(socks5Parses);
+                    cacheMtpRoto.Cache(MTProtoParses.AsReadOnly());
+                    cacheSocks5.Cache(socks5Parses.AsReadOnly());
 
                     WarningAndInfoLog.LogInfo($"✅ Кэш обновлён: MTProto {MTProtoParses.Count}, SOCKS5 {socks5Parses.Count}", _logger);
                     await serviceNewLog.SaveLog($"Кэш обновлён: MTProto {MTProtoParses.Count}, SOCKS5 {socks5Parses.Count}", DateTime.UtcNow.ToString());

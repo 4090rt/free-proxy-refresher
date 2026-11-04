@@ -16,10 +16,10 @@ namespace ProxyTG_HTTP.TestMtproto
             if (lowered.StartsWith("0x"))
                 lowered = lowered[2..];
 
-            if (lowered.StartsWith("ee") && lowered.Length == 36)
+            if (lowered.StartsWith("ee") && lowered.Length == 34)
                 return (Convert.FromHexString(lowered.Substring(2, 32)), null);
 
-            if (lowered.StartsWith("dd") && lowered.Length == 68)
+            if (lowered.StartsWith("dd") && lowered.Length == 66)
             {
                 byte[] key = Convert.FromHexString(lowered.Substring(34, 32));
                 string domain = Encoding.ASCII

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using ProxyTG_HTTP.ExceptionBase;
 using ProxyTG_HTTP.ExceptionBase.LogInfoANDLogWarn;
 using ProxyTG_HTTP.ModelData.ParseData;
+using ProxyTG_HTTP.ModelData.UpdateData;
 using System;
 using System.Collections.Generic;
 
@@ -23,7 +24,7 @@ namespace ProxyTG_HTTP.Cache
             _memorycache = memorycache;
         }
 
-        public void Cache(List<HttpParse> parseSocks5)
+        public void Cache(IReadOnlyList<HttpParse> parseSocks5)
         {
             try
             {
