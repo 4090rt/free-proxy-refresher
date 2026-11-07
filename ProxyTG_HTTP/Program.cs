@@ -69,6 +69,7 @@ class Program
         servise.AddScoped<DeleteOldLogs>();
         servise.AddScoped<PoolSQLite>();
         servise.AddScoped<DBPathCLass>();
+        servise.AddMemoryCache();
 
         new Client_GIT_MTProto(loggerFactory.CreateLogger<Client_GIT_MTProto>()).Client_SettingsGit(servise);
         new Client_GIT_SOCKS5(loggerFactory.CreateLogger<Client_GIT_SOCKS5>()).Client_SettingsGit_SOCKS5(servise);
@@ -77,46 +78,57 @@ class Program
 
         servise.AddScoped<TableForLog>();
         servise.AddScoped<AddNewLogs>();
+        servise.AddScoped<AllLogsRequest>();
+
         servise.AddScoped<SendLogToMail>();
         servise.AddScoped<CreateFile>();
         servise.AddScoped<MailKitClientYandex>();
-        servise.AddScoped<AllLogsRequest>();
         servise.AddScoped<MailKitClient>();
+
         servise.AddScoped<ParseSocks5>();
         servise.AddScoped<ParseMTProto>();
+
         servise.AddScoped<GetProxys>();
         servise.AddScoped<RequestMTProto>();
         servise.AddScoped<RequestSocks5>();
         servise.AddScoped<StrategyClass>();
         servise.AddScoped<HttpClient_Git_MTProto>();
+        servise.AddScoped<GetShadowProxy>();
+
         servise.AddScoped<Fabric_GIT>();
         servise.AddScoped<StrategyGoogle>();
         servise.AddScoped<StrategyYandex>();
         servise.AddScoped<ConsolePing>();
+
         servise.AddScoped<PingToGit>();
         servise.AddScoped<PingToGoggle>();
+
         servise.AddScoped<MemoryCacheMTProtoList>();
         servise.AddScoped<MemoryCacheSocks5List>();
+
         servise.AddScoped<TestSocksClient>();
         servise.AddScoped<TestSocks5WebProxy>();
-        servise.AddScoped<TestCicle>();
+
         servise.AddScoped<TestSocs5TunnelCreate>();
         servise.AddScoped<TestCircle>();
         servise.AddScoped<UserWebProxy>();
         servise.AddScoped<UseTcpTunnel>();
         servise.AddScoped<Strategy_TcpSocks5_Test, UserWebProxy>();
         servise.AddScoped<StrategyCLassTcp>();
+        servise.AddScoped<Fabric_TcpSocks5_Test, MetodWebProxy>();
         servise.AddScoped<MetodWebProxy>();
         servise.AddScoped<MetodTcpTunnel>();
-        servise.AddScoped<Fabric_TcpSocks5_Test, MetodWebProxy>();
         servise.AddScoped<ProxyTestFactory>();
+
         servise.AddScoped<JsonWriteTcpTests>();
+
         servise.AddScoped<TestCircleMtproto>();
         servise.AddScoped<TestMtprtotoTunnel>();
+
         servise.AddScoped<MemoryCacheShadowSoscks>();
-        servise.AddScoped<GetShadowProxy>();
         servise.AddScoped<ParseShadowSocsk>();
-        servise.AddMemoryCache();
+        servise.AddScoped<TestCircleShadow>();
+        servise.AddScoped<TestShadowTunnelCreate>();
 
         var serviceProvider = servise.BuildServiceProvider();
 
@@ -175,8 +187,8 @@ class Program
                     else if (input.ToLower() == "/check")
                     {
                         await StartProxyTestMethod(serviceProvider, cts).ConfigureAwait(false);
-                        await StartShadowSocksTestMethod(serviceProvider, cts).ConfigureAwait(false);
                         await StartMTProxyTestMethod(serviceProvider, cts).ConfigureAwait(false);
+                        await StartShadowTestMethod(serviceProvider, cts).ConfigureAwait(false);
                     }
                     else if (input.ToLower() == "/ping")
                     {
@@ -464,6 +476,62 @@ class Program
             _logger.LogWarning("Проверка MTProto прервана пользователем");
         }
         catch(InvalidOperationException ex)
+        {
+            _logger.LogError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            ExceptionLog.LogError(ex, _logger);
+        }
+    }
+
+    public static async Task StartShadowTestMethod(ServiceProvider serviceProvider, CancellationTokenSource cancellationTokenSource)
+    {
+        try
+        {
+            var logSave = serviceProvider.GetRequiredService<LogSave>();
+            var tester = serviceProvider.GetRequiredService<TestCircleShadow>();
+
+            if (Interlocked.CompareExchange(ref _ischekedShadowSocks, 1, 0) == 1)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("  Проверка уже идёт, дождитесь завершения");
+                Console.ResetColor();
+                return;
+            }
+
+            Volatile.Write(ref _cts, cancellationTokenSource);
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    TesteProxyModelCunt testeProxyModelCunt = await tester.CircleMethod(cancellationTokenSource.Token).ConfigureAwait(false);
+
+                    if (testeProxyModelCunt.Alive == null || testeProxyModelCunt.Tested == null)
+                    {
+                        _logger.LogError("Ошибка при получении результата проверки MTProto");
+                    }
+
+                    await PrintCheckResult(testeProxyModelCunt, logSave, "ShadowSocks").ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Выбор метода проверки: " + ex.Message);
+                }
+                finally
+                {
+                    Volatile.Write(ref _cts, null);
+                    Interlocked.CompareExchange(ref _ischekedShadowSocks, 0,1);
+                }
+            });
+
+        }
+        catch (OperationCanceledException ex) when (cancellationTokenSource.Token.IsCancellationRequested)
+        {
+            _logger.LogWarning("Проверка Shadowsocks прервана пользователем");
+        }
+        catch (InvalidOperationException ex)
         {
             _logger.LogError(ex.Message);
         }

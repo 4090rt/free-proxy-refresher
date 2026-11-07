@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using ProxyTG_HTTP.ExceptionBase;
 using ProxyTG_HTTP.ExceptionBase.LogInfoANDLogWarn;
 using ProxyTG_HTTP.ModelData.ParseData;
+using ProxyTG_HTTP.ModelData.UpdateData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,7 +45,7 @@ namespace ProxyTG_HTTP.Cache
                     _memorycache.Set(cache_key, shadowSocksParses, options);
 
                     _memorycache.Set(staleCachekey, shadowSocksParses, staleoptions);
-                    WarningAndInfoLog.LogInfo($"✅ MTProto-кэш обновлён: {shadowSocksParses.Count} прокси", _logger);
+                    WarningAndInfoLog.LogInfo($"✅ ShadowSocks  обновлён: {shadowSocksParses.Count} прокси", _logger);
                 }
             }
             catch (Exception ex)
@@ -81,6 +82,12 @@ namespace ProxyTG_HTTP.Cache
             {
                 if (shadowSocksParses != null && shadowSocksParses.Count > 0)
                 {
+                    var chekedshadow = new ChekedShadow
+                    {
+                        Proxies = shadowSocksParses,
+                        CheckedAtUtc = DateTime.UtcNow
+                    };
+
                     var options = new MemoryCacheEntryOptions()
                     .SetAbsoluteExpiration(TimeSpan.FromHours(13))
                     .SetSlidingExpiration(TimeSpan.FromHours(13));
@@ -89,8 +96,8 @@ namespace ProxyTG_HTTP.Cache
                     .SetAbsoluteExpiration(TimeSpan.FromHours(13))
                     .SetSlidingExpiration(TimeSpan.FromHours(14));
 
-                    _memorycache.Set(cache_keyUpdate, shadowSocksParses, options);
-                    _memorycache.Set(staleCachekeyUpdate, shadowSocksParses, staleoptions);
+                    _memorycache.Set(cache_keyUpdate, chekedshadow, options);
+                    _memorycache.Set(staleCachekeyUpdate, chekedshadow, staleoptions);
                 }
             }
             catch (Exception ex)
@@ -99,25 +106,25 @@ namespace ProxyTG_HTTP.Cache
             }
         }
 
-        public IReadOnlyList<ShadowSocksParse> GetUpdate()
+        public ChekedShadow? GetUpdate()
         {
             try
             {
-                if (_memorycache.TryGetValue(cache_keyUpdate, out IReadOnlyList<ShadowSocksParse>? cached) && cached != null)
+                if (_memorycache.TryGetValue(cache_keyUpdate, out ChekedShadow? cached) && cached != null)
                 {
                     return cached;
                 }
 
-                if (_memorycache.TryGetValue(staleCachekeyUpdate, out IReadOnlyList<ShadowSocksParse>? cachedstale) && cachedstale != null)
+                if (_memorycache.TryGetValue(staleCachekeyUpdate, out ChekedShadow? cachedstale) && cachedstale != null)
                 {
                     return cachedstale;
                 }
-                return new List<ShadowSocksParse>().AsReadOnly();
+                return null;
             }
             catch (Exception ex)
             {
                 ExceptionLog.LogError(ex, _logger);
-                return new List<ShadowSocksParse>().AsReadOnly();
+                return null;
             }
         }
     }

@@ -20,12 +20,14 @@ namespace ProxyTG_HTTP.Controller
         private readonly ILogger<ControllerGetAllProxy> _logger;
         private readonly MemoryCacheMTProtoList _memoryMTProtoList;
         private readonly MemoryCacheSocks5List _memorySocks5List;
+        private readonly MemoryCacheShadowSoscks _memoryCacheShadowSoscks;
 
         public ControllerGetAllProxy()
         {
             _logger = Services.GetRequiredService<ILogger<ControllerGetAllProxy>>();
             _memoryMTProtoList = Services.GetRequiredService<MemoryCacheMTProtoList>();
             _memorySocks5List = Services.GetRequiredService<MemoryCacheSocks5List>();
+            _memoryCacheShadowSoscks = Services.GetRequiredService<MemoryCacheShadowSoscks>();
         }
 
         [Route("GET", "/MTPROTO")]
@@ -82,6 +84,32 @@ namespace ProxyTG_HTTP.Controller
             }
         }
 
+        [Route("GET", "/SHADOWSOCKS")]
+        public Task<IReadOnlyList<ShadowSocksParse>> GetShadowSocks()
+        {
+            try
+            {
+                 ChekedShadow? chekedShadow = _memoryCacheShadowSoscks.GetUpdate();
+
+                if (chekedShadow != null)
+                {
+                    if (chekedShadow.Proxies.Count == 0)
+                    {
+                        _logger.LogWarning("Отдаю cырой список");
+                        return Task.FromResult(_memoryCacheShadowSoscks.Get());
+                    }
+
+                    return Task.FromResult(chekedShadow.Proxies);
+                }
+                return Task.FromResult(_memoryCacheShadowSoscks.Get());
+            }
+            catch (Exception ex)
+            {
+                ExceptionLog.LogError(ex, _logger);
+                return Task.FromResult<IReadOnlyList<ShadowSocksParse>>(Array.Empty<ShadowSocksParse>());
+            }
+        }
+
         [Route("GET", "/ALL")]
         public Task<AllStrcut> AllLists()
         {
@@ -100,10 +128,17 @@ namespace ProxyTG_HTTP.Controller
                     ? checkedSocks5.Proxies
                     : _memorySocks5List.Get();
 
+                ChekedShadow? chekedShadow = _memoryCacheShadowSoscks.GetUpdate();
+
+                IReadOnlyList<ShadowSocksParse>shadowSocksParses = chekedShadow != null && chekedShadow.Proxies.Count > 0
+                    ?chekedShadow.Proxies
+                    : _memoryCacheShadowSoscks.Get();
+
                 var strcut = new AllStrcut
                 {
                     listMTPRoto = mtProtoList,
                     listSocks5 = socks5List,
+                    listShadowSocks = shadowSocksParses
                 };
 
                 return Task.FromResult(strcut);
@@ -127,6 +162,9 @@ namespace ProxyTG_HTTP.Controller
                 IReadOnlyList<MtProtoParse> mtprotoall = _memoryMTProtoList.Get();
                 ChekedMtproto mtprototested = _memoryMTProtoList.GetUpdated() ?? new ChekedMtproto();
 
+                IReadOnlyList<ShadowSocksParse> shadowSocksParses = _memoryCacheShadowSoscks.Get();
+                ChekedShadow chekedShadow = _memoryCacheShadowSoscks.GetUpdate() ?? new ChekedShadow();
+
                 var resultStatsSocks5 = new ControllerStats()
                 {
                     ProxiesAll = proxiall.Count,
@@ -142,6 +180,14 @@ namespace ProxyTG_HTTP.Controller
                     DateTime = mtprototested.CheckedAtUtc
                 };
                 controllerStats.Add(resultStatsMTproto);
+
+                var resultStatsShadow = new ControllerStats()
+                {
+                    ProxiesAll = shadowSocksParses.Count,
+                    ProxiesTested = chekedShadow.Proxies.Count,
+                    DateTime = chekedShadow.CheckedAtUtc
+                };
+                controllerStats.Add(resultStatsShadow);
 
                 return Task.FromResult(controllerStats);
             }
