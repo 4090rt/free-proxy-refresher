@@ -10,14 +10,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProxyTG_HTTP.HTTP.HttpGetProxys
+namespace ProxyTG_HTTP.HTTP.HttpGetProxys.MtprotoandSocks5
 {
-    public interface HttpGetProxysStrategy
+    public interface MTTPROTOandSOCKS5HttpGetProxysStrategy
     {
-        public Task<List<ProxyData>> RequestInProxys(string client);
+        public Task<List<ProxyData>> RequestInProxys(string client, CancellationToken cancellationToken);
     }
 
-    public class RequestMTProto: HttpGetProxysStrategy
+    public class RequestMTProto: MTTPROTOandSOCKS5HttpGetProxysStrategy
     {
         public readonly GetProxys _getProxys;
         public readonly ParseMTProto _parseMTProto;
@@ -32,11 +32,11 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
             _logSave = logSave;
         }
 
-        public async Task<List<ProxyData>> RequestInProxys(string client)
+        public async Task<List<ProxyData>> RequestInProxys(string client, CancellationToken cancellationToken)
         {
             try
             {
-                ReadOnlyMemory<byte> readOnlyMemory = await _getProxys.GetMethod(client).ConfigureAwait(false);
+                ReadOnlyMemory<byte> readOnlyMemory = await _getProxys.GetMethod(client, cancellationToken).ConfigureAwait(false);
 
                 if (readOnlyMemory.Length == 0)
                     return new List<ProxyData>();
@@ -59,7 +59,7 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
         }
     }
 
-    public class RequestSocks5 : HttpGetProxysStrategy
+    public class RequestSocks5 : MTTPROTOandSOCKS5HttpGetProxysStrategy
     {
         public readonly GetProxys _getProxys;
         public readonly ParseSocks5 _parseSocks5;
@@ -74,11 +74,11 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
             _logSave = logSave;
         }
 
-        public async Task<List<ProxyData>> RequestInProxys(string client)
+        public async Task<List<ProxyData>> RequestInProxys(string client, CancellationToken cancellationToken)
         {
             try
             {
-                ReadOnlyMemory<byte> readOnlyMemory = await _getProxys.GetMethod(client).ConfigureAwait(false);
+                ReadOnlyMemory<byte> readOnlyMemory = await _getProxys.GetMethod(client, cancellationToken).ConfigureAwait(false);
 
                 if (readOnlyMemory.Length == 0)
                     return new List<ProxyData>();
@@ -103,12 +103,12 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
 
     public class StrategyClass
     {
-        public HttpGetProxysStrategy _strategy;
+        public MTTPROTOandSOCKS5HttpGetProxysStrategy _strategy;
 
-        public StrategyClass(HttpGetProxysStrategy strategy) => _strategy = strategy;
+        public StrategyClass(MTTPROTOandSOCKS5HttpGetProxysStrategy strategy) => _strategy = strategy;
 
-        public void SetStrategy(HttpGetProxysStrategy httpGetProxysStrategy) => _strategy = httpGetProxysStrategy;
+        public void SetStrategy(MTTPROTOandSOCKS5HttpGetProxysStrategy httpGetProxysStrategy) => _strategy = httpGetProxysStrategy;
 
-        public async Task<List<ProxyData>> MainMethod(string client) => await _strategy.RequestInProxys(client).ConfigureAwait(false);
+        public async Task<List<ProxyData>> MainMethod(string client, CancellationToken cancellationToken) => await _strategy.RequestInProxys(client, cancellationToken).ConfigureAwait(false);
     }
 }

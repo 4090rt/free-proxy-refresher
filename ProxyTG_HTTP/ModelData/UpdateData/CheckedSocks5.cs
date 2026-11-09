@@ -6,7 +6,7 @@ namespace ProxyTG_HTTP.ModelData.UpdateData
 {
     public class CheckedSocks5
     {
-        public IReadOnlyList<HttpParse> Proxies { get; set; } = new List<HttpParse>().AsReadOnly();
+        public IReadOnlyList<MtpParse> Proxies { get; set; } = new List<MtpParse>().AsReadOnly();
 
         public DateTime CheckedAtUtc { get; set; }
     }

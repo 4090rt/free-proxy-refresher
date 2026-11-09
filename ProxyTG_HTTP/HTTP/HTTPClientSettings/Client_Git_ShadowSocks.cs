@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Logging;
 using Polly;
+using ProxyTG_HTTP.ModelData.JsonDataModels;
+using ProxyTG_HTTP.ReadedJson;
 using SimpleW.Observability;
 using System;
 using System.Collections.Generic;
@@ -15,7 +17,6 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
     public class Client_Git_ShadowSocks
     {
         private readonly ILogger<Client_Git_ShadowSocks> _logger;
-        private readonly string _gitUrl = "https://raw.githubusercontent.com/10ium/V2Hub3/refs/heads/main/Split/Normal/shadowsocks";
 
         public void ClientShadow(IServiceCollection serviceDescriptors)
         {
@@ -28,7 +29,8 @@ namespace ProxyTG_HTTP.HTTP.HTTPClientSettings
                     client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64)" +
                         " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
 
-                    client.BaseAddress = new Uri(_gitUrl);
+                    var url = ReadAndDeserializeJson.MethodJsonSync<JsonDatStruct>();
+                    client.BaseAddress = new Uri(url.Logging.ProxySources.ShadowSocks);
 
                     client.DefaultRequestVersion = HttpVersion.Version20;
                     client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher;

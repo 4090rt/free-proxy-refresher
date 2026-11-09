@@ -2,15 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace ProxyTG_HTTP.ModelData.ParseData
 {
     public struct HttpParse
     {
-        public string IP { get; set; }
+        [JsonPropertyName("HostHttp")]
+        public string Host { get; set; }
+        [JsonPropertyName("PortHttp")]
         public string Port { get; set; }
+        [JsonPropertyName("DateGiveHttp")]
         public string Date { get; set; }
-        public string Version { get; set; }
     }
 }

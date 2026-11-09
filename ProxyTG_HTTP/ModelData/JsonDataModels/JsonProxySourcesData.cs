@@ -10,5 +10,8 @@ namespace ProxyTG_HTTP.ModelData.JsonDataModels
     {
         public string MTProto { get; set; }
         public string Socks5 { get; set; }
+        public string ShadowSocks { get; set; }
+        public string Http { get; set; }
+        public string Https { get; set; }
     }
 }

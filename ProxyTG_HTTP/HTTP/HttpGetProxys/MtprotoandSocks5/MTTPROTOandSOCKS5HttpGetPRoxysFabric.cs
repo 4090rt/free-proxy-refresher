@@ -5,42 +5,42 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProxyTG_HTTP.HTTP.HttpGetProxys
+namespace ProxyTG_HTTP.HTTP.HttpGetProxys.MtprotoandSocks5
 {
-    public interface HttpGetPRoxysFabric
+    public interface MTTPROTOandSOCKS5HttpGetPRoxysFabric
     {
-        public Task<List<ProxyData>> HttpClients();
+        public Task<List<ProxyData>> HttpClients(CancellationToken cancellationToken);
     }
 
-    public class HttpClient_Git_MTProto : HttpGetPRoxysFabric
+    public class HttpClient_Git_MTProto : MTTPROTOandSOCKS5HttpGetPRoxysFabric
     {
         public RequestMTProto _requestMTProto;
 
         public HttpClient_Git_MTProto(RequestMTProto requestMTProto) => _requestMTProto = requestMTProto;
 
-        public async Task<List<ProxyData>> HttpClients()
+        public async Task<List<ProxyData>> HttpClients(CancellationToken cancellationToken)
         {
             var client = "Client_GIT_MTProto";
 
             StrategyClass strategyClass = new StrategyClass(_requestMTProto);
-            List<ProxyData> list = await strategyClass.MainMethod(client).ConfigureAwait(false);
+            List<ProxyData> list = await strategyClass.MainMethod(client, cancellationToken).ConfigureAwait(false);
 
             return list;
         }
     }
 
-    public class HttpClient_Git_Socks5 : HttpGetPRoxysFabric
+    public class HttpClient_Git_Socks5 : MTTPROTOandSOCKS5HttpGetPRoxysFabric
     {
         public RequestSocks5 _requestSocks5;
 
         public HttpClient_Git_Socks5(RequestSocks5 requestSocks5) => _requestSocks5 = requestSocks5;
 
-        public async Task<List<ProxyData>> HttpClients()
+        public async Task<List<ProxyData>> HttpClients(CancellationToken cancellationToken)
         {
             var client = "Client_GIT_SOCKS5";
 
             StrategyClass strategyClass = new StrategyClass(_requestSocks5);
-            List<ProxyData> list = await strategyClass.MainMethod(client).ConfigureAwait(false);
+            List<ProxyData> list = await strategyClass.MainMethod(client,cancellationToken).ConfigureAwait(false);
 
             return list;
         }
@@ -57,7 +57,7 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys
             _requestSocks5 = requestSocks5;
         }
 
-        public  HttpGetPRoxysFabric HttpGetPRoxysFabric(string type_client)
+        public  MTTPROTOandSOCKS5HttpGetPRoxysFabric HttpGetPRoxysFabric(string type_client)
         {
             return type_client.ToLower() switch
             {
