@@ -16,6 +16,8 @@ using ProxyTG_HTTP.ExceptionBase.LogInfoANDLogWarn;
 using ProxyTG_HTTP.HTTP.HTTPClientSettings;
 using ProxyTG_HTTP.HTTP.HttpGet;
 using ProxyTG_HTTP.HTTP.HttpGetProxys;
+using ProxyTG_HTTP.HTTP.HttpGetProxys.HttpandHttps;
+using ProxyTG_HTTP.HTTP.HttpGetProxys.MtprotoandSocks5;
 using ProxyTG_HTTP.HTTP.PingRequest;
 using ProxyTG_HTTP.MailKit;
 using ProxyTG_HTTP.ModelData.JsonDataModels;
@@ -75,6 +77,8 @@ class Program
         new Client_GIT_SOCKS5(loggerFactory.CreateLogger<Client_GIT_SOCKS5>()).Client_SettingsGit_SOCKS5(servise);
         new Client_Git_Ping(loggerFactory.CreateLogger<Client_Git_Ping>()).Client_SettingsGit_Ping(servise);
         new Client_Google(loggerFactory.CreateLogger<Client_Google>()).Client_SettingsGoogle(servise);
+        new Client_GIT_HTTP(loggerFactory.CreateLogger<Client_GIT_HTTP>()).ClientHTTP(servise);
+        new Client_GIT_HTTPS(loggerFactory.CreateLogger<Client_GIT_HTTPS>()).ClientHttps(servise);
 
         servise.AddScoped<TableForLog>();
         servise.AddScoped<AddNewLogs>();
@@ -129,6 +133,11 @@ class Program
         servise.AddScoped<ParseShadowSocsk>();
         servise.AddScoped<TestCircleShadow>();
         servise.AddScoped<TestShadowTunnelCreate>();
+
+        servise.AddScoped<GetProxyHttp>();
+        servise.AddScoped<FabriClassHttp>();
+        servise.AddScoped<HttpRequestStrategy>();
+        servise.AddScoped<ParseHttpandHttps>();
 
         var serviceProvider = servise.BuildServiceProvider();
 
@@ -688,6 +697,7 @@ class Program
         var getShadow = serviceProvider.GetRequiredService<GetShadowProxy>();
         var cacheShadow = serviceProvider.GetRequiredService<MemoryCacheShadowSoscks>();
         var parser = serviceProvider.GetRequiredService<ParseShadowSocsk>();
+        var getproxyhttp = serviceProvider.GetRequiredService<FabriClassHttp>();
 
         try
         {
@@ -695,12 +705,11 @@ class Program
             await serviceNewLog.SaveLog("Запускаю таймер обновления прокси (каждые 12 часов)", DateTime.UtcNow.ToString());
             using var cts = new CancellationTokenSource();
 
-
             _proxyTimer = new Timer(async _ =>
             {
                 if (Interlocked.Exchange(ref _isRefreshing, 1) == 1)
                 {
-                    // WarningAndInfoLog.LogInfo("Обновление уже выполняется, пропускаем тик", _logger);
+                    WarningAndInfoLog.LogInfo("Обновление уже выполняется, пропускаем тик", _logger);
                     return;
                 }
 
@@ -709,24 +718,32 @@ class Program
                     var mtProtoStrategy = getProxy.HttpGetPRoxysFabric("mtproto");
                     var socks5Strategy = getProxy.HttpGetPRoxysFabric("socks5");
 
-                    Task<List<ProxyData>> mtProtoTask = mtProtoStrategy.HttpClients();
-                    Task<List<ProxyData>> socks5Task = socks5Strategy.HttpClients();
+                    var httpstrategy = getproxyhttp.FabricMethod("HTTP");
+                    var httpsstrategy = getproxyhttp.FabricMethod("HTTPS");
+;
+                    Task<List<ProxyData>> mtProtoTask = mtProtoStrategy.HttpClients(cts.Token);
+                    Task<List<ProxyData>> socks5Task = socks5Strategy.HttpClients(cts.Token);
                     Task<IReadOnlyList<ShadowSocksParseSS>> shadowSocksParses = getShadow.HttpGet(cts.Token);
+                    Task<IReadOnlyList<ProxyRecord>> HTTPtask = httpstrategy.CreateHttpRequest(cts.Token);
+                    Task<IReadOnlyList<ProxyRecord>> HTTPStask = httpsstrategy.CreateHttpRequest(cts.Token);
 
-                    await Task.WhenAll(mtProtoTask, socks5Task, shadowSocksParses).ConfigureAwait(false);
+                    await Task.WhenAll(mtProtoTask, socks5Task, shadowSocksParses, HTTPtask, HTTPStask).ConfigureAwait(false);
 
                     List<ProxyData> mtProtoData = await mtProtoTask.ConfigureAwait(false);
                     List<ProxyData> socks5Data = await socks5Task.ConfigureAwait(false);
                     IReadOnlyList<ShadowSocksParseSS> shadowData = await shadowSocksParses.ConfigureAwait(false);
+                    IReadOnlyList<ProxyRecord> httpData = await HTTPtask.ConfigureAwait(false);
+                    IReadOnlyList<ProxyRecord> httpsData = await HTTPStask.ConfigureAwait(false);
 
                     WarningAndInfoLog.LogInfo($"Получено прокси: MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count}, ShadoSocks {shadowData.Count}", _logger);
                     await serviceNewLog.SaveLog($"Получено прокси: MTProto {mtProtoData.Count}, SOCKS5 {socks5Data.Count},ShadoSocks {shadowData.Count}", DateTime.UtcNow.ToString());
 
-                    List<HttpParse> socks5Parses = socks5Data.Select(p => new HttpParse { IP = p.Server, Port = p.Port, Version = p.Version, Date = p.Date }).ToList();
+                    List<MtpParse> socks5Parses = socks5Data.Select(p => new MtpParse { IP = p.Server, Port = p.Port, Version = p.Version, Date = p.Date }).ToList();
                     List<MtProtoParse> MTProtoParses = mtProtoData.Select(p => new MtProtoParse
                     { ServerKey = p.Server, PortKey = p.Port, SecretKey = p.Secret ?? string.Empty, Version = p.Version, Date = p.Date }).ToList();
                     IReadOnlyList<ShadowSocksParse> shadowSocksParses1 = await parser.ParsedMetod(shadowData, cts.Token).ConfigureAwait(false);
 
+                    //Кэш для HTTP
                     cacheShadow.Cached(shadowSocksParses1);
                     cacheMtpRoto.Cache(MTProtoParses.AsReadOnly());
                     cacheSocks5.Cache(socks5Parses.AsReadOnly());

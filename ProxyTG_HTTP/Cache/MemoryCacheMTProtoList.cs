@@ -66,16 +66,16 @@ namespace ProxyTG_HTTP.Cache
             {
                 if (_memorycache.TryGetValue(cache_key, out List<MtProtoParse>? fresh) && fresh != null)
                 {
-                    // WarningAndInfoLog.LogInfo($"Отдаю fresh MTProto-кэш: {fresh.Count} прокси", _logger);
+                    WarningAndInfoLog.LogInfo($"Отдаю fresh MTProto-кэш: {fresh.Count} прокси", _logger);
                     return fresh.AsReadOnly();
                 }
 
                 if (_memorycache.TryGetValue(staleCachekey, out List<MtProtoParse>? stale) && stale != null)
                 {
-                    // WarningAndInfoLog.LogWarning($"Fresh MTProto пуст, отдаю stale: {stale.Count} прокси", _logger);
+                    WarningAndInfoLog.LogWarning($"Stale MTProto пуст, отдаю stale: {stale.Count} прокси", _logger);
                     return stale.AsReadOnly();
                 }
-                // WarningAndInfoLog.LogWarning("🆘 Нет ни fresh, ни stale MTProto данных", _logger);
+                WarningAndInfoLog.LogWarning("🆘 Нет ни fresh, ни stale MTProto данных", _logger);
                 return new List<MtProtoParse>().AsReadOnly();
             }
             catch (Exception ex)
@@ -121,10 +121,10 @@ namespace ProxyTG_HTTP.Cache
             {
                 if (_memorycache.TryGetValue(cache_keyUpdate, out ChekedMtproto? updated) && updated != null)
                 {
-                    // WarningAndInfoLog.LogInfo($"Отдаю updated MTProto-кэш: {updated.Count} прокси", _logger);
+                     WarningAndInfoLog.LogInfo($"Отдаю updated MTProto-кэш: {updated.Proxies.Count} прокси", _logger);
                     return updated;
                 }
-                // WarningAndInfoLog.LogWarning("🆘 Нет updated MTProto данных", _logger);
+                WarningAndInfoLog.LogWarning("🆘 Нет updated MTProto данных", _logger);
                 return new ChekedMtproto();
             }
             catch (Exception ex)

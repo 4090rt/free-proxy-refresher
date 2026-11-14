@@ -24,7 +24,7 @@ namespace ProxyTG_HTTP.Cache
             _memorycache = memorycache;
         }
 
-        public void Cache(IReadOnlyList<HttpParse> parseSocks5)
+        public void Cache(IReadOnlyList<MtpParse> parseSocks5)
         {
             try
             {
@@ -55,32 +55,32 @@ namespace ProxyTG_HTTP.Cache
             }
         }
 
-        public IReadOnlyList<HttpParse> Get()
+        public IReadOnlyList<MtpParse> Get()
         {
             try
             {
-                if (_memorycache.TryGetValue(cache_key, out List<HttpParse>? fresh) && fresh != null)
+                if (_memorycache.TryGetValue(cache_key, out List<MtpParse>? fresh) && fresh != null)
                 {
                     // WarningAndInfoLog.LogInfo($"Отдаю fresh SOCKS5-кэш: {fresh.Count} прокси", _logger);
                     return fresh.AsReadOnly();
                 }
 
-                if (_memorycache.TryGetValue(staleCachekey, out List<HttpParse>? stale) && stale != null)
+                if (_memorycache.TryGetValue(staleCachekey, out List<MtpParse>? stale) && stale != null)
                 {
                     // WarningAndInfoLog.LogWarning($"Fresh SOCKS5 пуст, отдаю stale: {stale.Count} прокси", _logger);
                     return stale.AsReadOnly();
                 }
                 // WarningAndInfoLog.LogWarning("🆘 Нет ни fresh, ни stale SOCKS5 данных", _logger);
-                return new List<HttpParse>().AsReadOnly();
+                return new List<MtpParse>().AsReadOnly();
             }
             catch (Exception ex)
             {
                 ExceptionLog.LogError(ex, _logger);
-                return new List<HttpParse>();
+                return new List<MtpParse>();
             }
         }
 
-        public void CacheTested(List<HttpParse> parseTested)
+        public void CacheTested(List<MtpParse> parseTested)
         {
             try
             {

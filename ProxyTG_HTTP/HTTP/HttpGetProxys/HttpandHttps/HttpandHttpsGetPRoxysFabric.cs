@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProxyTG_HTTP.Parser;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys.HttpandHttps
 {
     public interface HttpandHttpsGetPRoxysFabric
     {
-        public Task<ReadOnlyMemory<byte>> CreateHttpRequest(CancellationToken cancellationToken);
+        public Task<IReadOnlyList<ProxyRecord>> CreateHttpRequest(CancellationToken cancellationToken);
     }
 
     public class CreateHttp : HttpandHttpsGetPRoxysFabric
@@ -19,7 +20,7 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys.HttpandHttps
 
         const string client = "ClientHttp";
 
-        public async Task<ReadOnlyMemory<byte>> CreateHttpRequest(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<ProxyRecord>> CreateHttpRequest(CancellationToken cancellationToken)
         {
             HttpRequestStrategy httpRequest = new HttpRequestStrategy(_httpRequest);
             return await httpRequest.MainMethod(client, cancellationToken).ConfigureAwait(false);
@@ -33,7 +34,7 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys.HttpandHttps
 
         const string client = "clientHttps";
 
-        public async Task<ReadOnlyMemory<byte>> CreateHttpRequest(CancellationToken cancellationToken)
+        public async Task<IReadOnlyList<ProxyRecord>> CreateHttpRequest(CancellationToken cancellationToken)
         {
             HttpRequestStrategy httpRequest = new HttpRequestStrategy(_httpsRequest);
             return await httpRequest.MainMethod(client, cancellationToken).ConfigureAwait(false);
@@ -55,8 +56,8 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys.HttpandHttps
         {
             return type_client.ToLower() switch
             {
-                "HTTP" => new CreateHttp(_createHttp),
-                "HTTPS" => new CreateHttps(_createHttps)
+                "http" => new CreateHttp(_createHttp),
+                "https" => new CreateHttps(_createHttps)
             };
         }
     }
