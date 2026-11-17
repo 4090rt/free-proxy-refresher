@@ -33,7 +33,7 @@ namespace ProxyTG_HTTP.TestHTTP
                     proxyPort < 1 || proxyPort > 65535)
                     return false;
 
-                    tcpClient = new TcpClient();
+                tcpClient = new TcpClient();
 
                 await tcpClient.ConnectAsync(httpParse.Host, int.Parse(httpParse.Port), cts.Token);
 
@@ -51,7 +51,6 @@ namespace ProxyTG_HTTP.TestHTTP
                 string head = Encoding.ASCII.GetString(buffer, 0, readed);
 
                 return head.StartsWith("HTTP/", StringComparison.Ordinal) && head.Contains(" 200");
-
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {

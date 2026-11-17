@@ -51,7 +51,7 @@ namespace ProxyTG_HTTP.TestHTTP
                 {
                     testeProxyModelCunt.Tested = httpParse.Count;
 
-                    var current = Interlocked.Increment(ref parsedproxy);
+                    Interlocked.Increment(ref parsedproxy);
 
                     bool result = await _testhttpTunnel.TunnelCreate(httpproxy, ctsl).ConfigureAwait(false);
 

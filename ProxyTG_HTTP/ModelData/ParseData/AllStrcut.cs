@@ -11,5 +11,8 @@ namespace ProxyTG_HTTP.ModelData.ParseData
         public IReadOnlyList<MtProtoParse> listMTPRoto { get; set; }
         public IReadOnlyList<MtpParse> listSocks5 { get; set; }
         public IReadOnlyList<ShadowSocksParse> listShadowSocks { get; set; }
+
+        public IReadOnlyList<HttpParse> listHTTP { get; set; }
+        public IReadOnlyList<HttpsParse> listHTTPS { get; set; }
     }
 }

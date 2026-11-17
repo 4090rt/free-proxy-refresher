@@ -27,6 +27,8 @@ using ProxyTG_HTTP.ModelData.PingData;
 using ProxyTG_HTTP.Parser;
 using ProxyTG_HTTP.ReadedJson;
 using ProxyTG_HTTP.SendToMail;
+using ProxyTG_HTTP.TestHTTP;
+using ProxyTG_HTTP.TestHTTPS;
 using ProxyTG_HTTP.TestMtproto;
 using ProxyTG_HTTP.TestShadowsocks;
 using ProxyTG_HTTP.TestSocks5;
@@ -45,6 +47,8 @@ class Program
     public static int _ischekedSocks5 = 0;
     public static int _ischekedMtproto = 0;
     public static int _ischekedShadowSocks = 0;
+    public static int _ischekedHttps = 0;
+    public static int _ischekedHttp = 0;
     public static CancellationTokenSource? _cts;
 
 
@@ -138,6 +142,10 @@ class Program
         servise.AddScoped<FabriClassHttp>();
         servise.AddScoped<HttpRequestStrategy>();
         servise.AddScoped<ParseHttpandHttps>();
+        servise.AddScoped<TestCircleHTTP>();
+        servise.AddScoped<TestCIrcleHTTPS>();
+        servise.AddScoped<TestHTTPSTunnel>();
+        servise.AddScoped<TestHTTPTunnel>();
 
         var serviceProvider = servise.BuildServiceProvider();
 
@@ -198,6 +206,8 @@ class Program
                         await StartProxyTestMethod(serviceProvider, cts).ConfigureAwait(false);
                         await StartMTProxyTestMethod(serviceProvider, cts).ConfigureAwait(false);
                         await StartShadowTestMethod(serviceProvider, cts).ConfigureAwait(false);
+                        await StartHTTPTestMethod(serviceProvider, cts).ConfigureAwait(false);
+                        await StartHTTPSTestMethod(serviceProvider, cts).ConfigureAwait(false);
                     }
                     else if (input.ToLower() == "/ping")
                     {
@@ -385,6 +395,110 @@ class Program
         }
     }
 
+    public static async Task StartHTTPTestMethod(ServiceProvider serviceProvider, CancellationTokenSource cancellationTokenSource)
+    {
+        try
+        {
+            var tester = serviceProvider.GetRequiredService<TestCircleHTTP>();
+            var logsave = serviceProvider.GetRequiredService<LogSave>();
+
+            if (Interlocked.CompareExchange(ref _ischekedHttp, 0, 1) == 1)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("  Проверка уже идёт, дождитесь завершения");
+                Console.ResetColor();
+                return;
+            }
+
+            Volatile.Write(ref _cts, cancellationTokenSource);
+
+            try
+            {
+                var result = await tester.TestCircle(cancellationTokenSource.Token).ConfigureAwait(false);
+
+                if (result.Alive == 0 || result.Tested == 0)
+                {
+                    _logger.LogError("Ошибка при получении результата проверки HTTP");
+                }
+                await PrintCheckResult(result, logsave, "HTTP").ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Выбор метода проверки: " + ex.Message);
+            }
+            finally
+            {
+                Volatile.Write(ref _cts, null);
+                Interlocked.Exchange(ref _ischekedShadowSocks, 0);
+            }
+        }
+        catch (OperationCanceledException ex) when (cancellationTokenSource.Token.IsCancellationRequested)
+        {
+            _logger.LogWarning("Проверка Http прервана пользователем");
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            ExceptionLog.LogError(ex, _logger);
+        }
+    }
+
+    public static async Task StartHTTPSTestMethod(ServiceProvider serviceProvider, CancellationTokenSource cancellationTokenSource)
+    {
+        try
+        {
+            var tester = serviceProvider.GetRequiredService<TestCIrcleHTTPS>();
+            var logsave = serviceProvider.GetRequiredService<LogSave>();
+
+            if (Interlocked.CompareExchange(ref _ischekedHttps, 0,1) == 1)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("  Проверка уже идёт, дождитесь завершения");
+                Console.ResetColor();
+                return;
+            }
+
+            Volatile.Write(ref _cts, cancellationTokenSource);
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    TesteProxyModelCunt result = await tester.TestCircle(cancellationTokenSource.Token).ConfigureAwait(false);
+
+                    if (result.Alive == 0 || result.Tested == 0)
+                    {
+                        _logger.LogError("Ошибка при получении результата проверки HTTPS");
+                    }
+                    await PrintCheckResult(result, logsave, "HTTPS").ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Выбор метода проверки: " + ex.Message);
+                }
+                finally
+                {
+                    Volatile.Write(ref _cts, null);
+                    Interlocked.Exchange(ref _ischekedShadowSocks, 0);
+                }
+            });
+        }
+        catch (OperationCanceledException ex) when (cancellationTokenSource.Token.IsCancellationRequested)
+        {
+            _logger.LogWarning("Проверка Https прервана пользователем");
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            ExceptionLog.LogError(ex, _logger);
+        }
+    }
     public static async Task StartShadowSocksTestMethod(ServiceProvider serviceProvider, CancellationTokenSource cancellationTokenSource)
     {
         try
