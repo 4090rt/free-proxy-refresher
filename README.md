@@ -1,10 +1,10 @@
 # ProxyTG_HTTP
 
-Агрегатор **SOCKS5** и **MTProto** (Telegram) прокси с встроенным кэшированием, REST-API, проверкой доступности SOCKS5, логированием и отправкой логов на почту.
+Агрегатор **HTTP / HTTPS / SOCKS5 / MTProto (Telegram) / ShadowSocks** прокси с встроенным кэшированием, REST-API, проверкой доступности и отправкой логов на почту.
 
 Скрипт периодически скачивает публичные списки прокси, парсит их, хранит в кэше и раздаёт по HTTP. Если источник прокси недоступен — отдаёт «старые» (stale) данные, а не пустые списки.
 
-> Поддержка **HTTP-прокси удалена**. Проект работает только с SOCKS5 и MTProto. Класс `HttpParse` — это модель SOCKS5-прокси (имя историческое).
+> Поддерживаемые протоколы: HTTP, HTTPS, SOCKS5, MTProto, ShadowSocks.
 
 ---
 
@@ -15,7 +15,7 @@
 - [Конфигурация](#конфигурация)
 - [REST API](#rest-api)
 - [Консольные команды](#консольные-команды)
-- [Проверка SOCKS5](#проверка-socks5)
+- [Проверка прокси](#проверка-прокси)
 - [Как это работает](#как-это-работает)
 - [Кэширование](#кэширование)
 - [Логирование и база данных](#логирование-и-база-данных)
@@ -78,7 +78,10 @@ dotnet run --project ProxyTG_HTTP
 
     "ProxySources": {
       "MTProto": "https://raw.githubusercontent.com/SoliSpirit/mtproto/master/all_proxies.txt",
-      "Socks5": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt"
+      "Socks5": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt",
+      "ShadowSocks": "https://raw.githubusercontent.com/10ium/V2Hub3/refs/heads/main/Split/Normal/shadowsocks",
+      "Http": "https://raw.githubusercontent.com/databay-labs/free-proxy-list/master/http.txt",
+      "Https": "https://raw.githubusercontent.com/databay-labs/free-proxy-list/master/https.txt"
     },
 
     "LogReterningDay": {
@@ -115,6 +118,9 @@ dotnet run --project ProxyTG_HTTP
 | `Logging.LogLevel.Default` | Уровень логирования (`Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`, `None`) | `Information` |
 | `Logging.ProxySources.MTProto` | URL списка MTProto-прокси (TXT, `t.me/proxy?...` на строку) | `https://.../all_proxies.txt` |
 | `Logging.ProxySources.Socks5` | URL списка SOCKS5-прокси (TXT, формат `ip:port`) | `https://.../socks5.txt` |
+| `Logging.ProxySources.ShadowSocks` | URL списка ShadowSocks-прокси (JSON/лист) | `https://.../shadowsocks` |
+| `Logging.ProxySources.Http` | URL списка HTTP-прокси (TXT, `ip:port`) | `https://.../http.txt` |
+| `Logging.ProxySources.Https` | URL списка HTTPS-прокси (TXT, `ip:port`) | `https://.../https.txt` |
 | `Logging.LogReterningDay.Day` | Сколько дней хранить логи в БД (удаляются при старте) | `1` |
 | `Logging.StrategyMailKit.Strategy` | Почтовый провайдер для `/logsend`: `Google` или `Yandex` | `Google` |
 | `Logging.StrategyMailKit.Mail` | Email отправителя | `you@gmail.com` |
@@ -123,7 +129,7 @@ dotnet run --project ProxyTG_HTTP
 | `Logging.PingToSerivceURL.Google` | URL для пинга до Google (`/ping`) | `https://www.google.com/` |
 | `Logging.PingToSerivceURL.GIT` | URL для пинга до GitHub (`/ping`) | `https://api.github.com` |
 | `Logging.PdfSaveFilePath.FAILEPATH` | Имя папки/файла для PDF-отчёта (относительно папки приложения) | `LogsFile` |
-| `Logging.TestProxyUrl.Url` | URL, по которому проверяется живость SOCKS5-прокси | `https://api.ipify.org` |
+| `Logging.TestProxyUrl.Url` | URL, по которому проверяется живость прокси | `https://api.ipify.org` |
 
 > **Примечание по почте.** Gmail требует включённый двухфакторный вход и Application password (не обычный пароль). Для Yandex — пароль приложения в настройках безопасности аккаунта.
 
@@ -131,93 +137,77 @@ dotnet run --project ProxyTG_HTTP
 
 ## REST API
 
-Сервер слушает порт `2015` (адрес `0.0.0.0`, только IPv4). Все маршруты смонтированы под префиксом `/api`.
+Сервер слушает порт `2015` (адрес `0.0.0.0`, только IPv4). Все маршруты смонтированы под префиксом `/proxy`.
 
 | Метод | Путь | Описание |
 |---|---|---|
-| `GET` | `/api/proxy/MTPROTO` | Список MTProto-прокси |
-| `GET` | `/api/proxy/SOCKS5` | Проверенные SOCKS5 (если проверка была), иначе сырьё |
-| `GET` | `/api/proxy/ALL` | MTProto + SOCKS5 |
-| `GET` | `/api/proxy/STATS` | Сводка: сколько сырья, сколько проверено, время последней проверки |
+| `GET` | `/proxy/MTPROTO` | Список MTProto-прокси |
+| `GET` | `/proxy/SOCKS5` | Проверенные SOCKS5 (если проверка была), иначе сырьё |
+| `GET` | `/proxy/SHADOWSOCKS` | Проверенные ShadowSocks (если проверка была), иначе сырьё |
+| `GET` | `/proxy/HTTP` | Проверенные HTTP-прокси (если проверка была), иначе сырьё |
+| `GET` | `/proxy/HTTPS` | Проверенные HTTPS-прокси (если проверка была), иначе сырьё |
+| `GET` | `/proxy/ALL` | Все списки вместе |
+| `GET` | `/proxy/STATS` | Сводка: сколько сырья, сколько проверено, время последней проверки |
 
 > При обращении из локальной сети используйте `127.0.0.1`, а не `localhost` — сервер слушает IPv4, а `localhost` может резолвиться в IPv6 (`::1`).
 
-### Пример: получить MTProto-прокси
+### Пример: получить HTTP-прокси
 
 ```bash
-curl http://127.0.0.1:2015/api/proxy/MTPROTO
+curl http://127.0.0.1:2015/proxy/HTTP
 ```
 
-Ответ — элементы `MtProtoParse` (для подключения через Telegram: `server, port, secret`):
+Ответ — элементы `HttpParse` (`HostHttp`, `PortHttp`, `DateGiveHttp`):
 
 ```json
 [
   {
-    "ServerKey": "185.76.151.150",
-    "PortKey": "443",
-    "SecretKey": "bfefffffffffffffffffffffffffffff",
-    "Date": "",
-    "Version": ""
+    "HostHttp": "5.45.126.128",
+    "PortHttp": "8080",
+    "DateGiveHttp": "2026-..."
   }
 ]
 ```
 
-Example подключения в клиенте Telegram: `185.76.151.150:443` с secret `bfefffffffffffffffffffffffffffff`.
-
-### Пример: получить SOCKS5-прокси
+### Пример: получить HTTPS-прокси
 
 ```bash
-curl http://127.0.0.1:2015/api/proxy/SOCKS5
+curl http://127.0.0.1:2015/proxy/HTTPS
 ```
 
-Элементы `HttpParse` (`IP`, `Port`, `Date`, `Version`):
-
-```json
-[
-  {
-    "IP": "5.45.126.128",
-    "Port": "8080",
-    "Date": "",
-    "Version": ""
-  },
-  {
-    "IP": "80.253.246.238",
-    "Port": "6618",
-    "Date": "",
-    "Version": ""
-  }
-]
-```
+Ответ — элементы `HttpsParse` (`HostHttp`, `PortHttp`, `DateGiveHttp`).
 
 ### Пример: все списки сразу
 
 ```bash
-curl http://127.0.0.1:2015/api/proxy/ALL
+curl http://127.0.0.1:2015/proxy/ALL
 ```
 
 Ответ (`AllStrcut`):
 
 ```json
 {
-  "listMTPRoto": [ { "ServerKey": "185.76.151.150", "PortKey": "443", "SecretKey": "...", "Date": "", "Version": "" } ],
-  "listSocks5": [ { "IP": "5.45.126.128", "Port": "8080", "Date": "", "Version": "" } ]
+  "listMTPRoto": [ { "ServerKey": "...", "PortKey": "443", "SecretKey": "...", "Date": "", "Version": "" } ],
+  "listSocks5": [ { "IP": "5.45.126.128", "Port": "8080", "Date": "", "Version": "" } ],
+  "listShadowSocks": [ ... ],
+  "listHTTP": [ { "HostHttp": "...", "PortHttp": "8080", "DateGiveHttp": "..." } ],
+  "listHTTPS": [ { "HostHttp": "...", "PortHttp": "443", "DateGiveHttp": "..." } ]
 }
 ```
 
 ### Пример: статистика
 
 ```bash
-curl http://127.0.0.1:2015/api/proxy/STATS
+curl http://127.0.0.1:2015/proxy/STATS
 ```
 
 Ответ (`ControllerStats`):
 
 ```json
-{
-  "ProxiesAll": 1234,
-  "ProxiesTested": 87,
-  "DateTime": "2026-10-10T12:34:56.789Z"
-}
+[
+  { "ProxiesAll": 1234, "ProxiesTested": 87, "DateTime": "2026-..." },
+  { "ProxiesAll": 500, "ProxiesTested": 120, "DateTime": "2026-..." }
+]
 ```
 
 ### Поведение при пустом / устаревшем кэше
@@ -226,7 +216,7 @@ curl http://127.0.0.1:2015/api/proxy/STATS
 - Свежих нет, есть «старые» (stale) → возвращаются stale (данные не старше ~13–14 часов).
 - Нет вообще → пустой JSON-массив `[]`, в консоль пишется предупреждение.
 
-**`/SOCKS5` и проверенный кэш.** Если проверка SOCKS5 уже выполнялась, `/SOCKS5` и `/ALL` отдают **только проверенный список**. Если проверка завершилась с нулём живых прокси, отдаётся пустой список `[]` (а не сырьё) — это осознанно: «живых нет» — тоже результат. Сырьё отдаётся только пока проверки ещё не было.
+**Проверенный кэш.** Если проверка протокола уже выполнялась, соответствующий маршрут (`/HTTP`, `/HTTPS`, `/SOCKS5`, `/SHADOWSOCKS`) отдаёт **только проверенный список**. Если проверка завершилась с нулём живых прокси, отдаётся пустой список `[]`. Сырьё отдаётся только пока проверки ещё не было.
 
 ---
 
@@ -237,7 +227,7 @@ curl http://127.0.0.1:2015/api/proxy/STATS
 | `/logsend` | Выгрузить логи текущей сессии из БД и отправить на почту (HTML-таблица + PDF-вложение) |
 | `/ping` | Замерить пинг до Google и GitHub, вывести таблицу |
 | `/socks5` | Выбрать метод проверки SOCKS5 (сохраняет выбор, саму проверку не запускает) |
-| `/check` | Запустить проверку выбранным методом (в фоне) |
+| `/check` | Запустить проверку всех протоколов (MTProto, SOCKS5, ShadowSocks, HTTP, HTTPS) в фоне |
 
 Пример:
 
@@ -248,74 +238,69 @@ curl http://127.0.0.1:2015/api/proxy/STATS
 /check      Запустить проверку выбранным методом
 ```
 
+От двойного запуска одной и той же проверки защищает статический флаг (захват через `Interlocked.CompareExchange` до `Task.Run`, сброс в `finally`).
+
 ---
 
-## Проверка SOCKS5
+## Проверка прокси
 
-Проверка доступности SOCKS5-прокси запускается вручную командой `/check` по методу, выбранному в `/socks5`. Выбор хранится в файле `TestProxy_Settings.json` (`Method_Socks5_Test`).
+Проверка запускается командой `/check`. Каждый протокол проверяется независимо, результат кладётся в отдельный проверенный кэш и через 13 часов истекает.
 
-Доступны два метода:
+### HTTP-прокси
 
-| # | Метод | Как проверяет |
-|---|---|---|
-| 1 | `http` | HTTP-запрос через `SocketsHttpHandler` (прокси-клиент) на `Logging.TestProxyUrl.Url` |
-| 2 | `tcp` | Ручное SOCKS5-рукопожатие и CONNECT-туннель к `httpbin.org:80`, проверка ответа `HTTP/1.1 200` |
+TCP-подключение к прокси → `CONNECT <цель>:<порт> HTTP/1.1` → чтение заголовков ответа. Успех — статус `2xx` (`HTTP/1.1 200 ...` или `HTTP/1.0 200 ...`). Тестовый 호ст/порт цели по умолчанию `httpbin.org:80`.
 
-Цепочка вызовов:
+### HTTPS-прокси
+
+TCP-подключение к прокси → `SslStream.AuthenticateAsClient` (реальный TLS-хендшейк, проверка сертификата отключена, т.к. у бесплатных прокси чаще всего самоподписанные сертификаты) → внутри TLS отправляется `CONNECT <цель>:<порт> HTTP/1.1` → чтение ответа через `SslStream`. Успех — статус `2xx`. Тестовый хост/порт цели по умолчанию `httpbin.org:443`.
+
+Ответ читается до первого `\r\n\r\n` одним `ReadAsync` (ответ на `CONNECT` не имеет тела), затем парсится статус-строка: `head.StartsWith("HTTP/")` и код из `200..299`.
+
+### Цепочка вызовов (HTTP / HTTPS)
 
 ```
-Fabric_TcpSocks5_Test.TestFactoryMethod
-  └─ Strategy_TcpSocks5_Test.TestMethod
-       └─ TestCicle.TestMethod / TestCircle.Circle   (Parallel.ForEachAsync, MaxDegreeOfParallelism = 10)
-            └─ TestSocks5WebProxy.TestProxy / TestSocs5TunnelCreate.Test
-  → MemoryCacheSocks5List.CacheTested(...)  → /SOCKS5
+Timer / /check
+  └─ TestCircleHTTP / TestCIrcleHTTPS
+       └─ Parallel.ForEachAsync (MaxDegreeOfParallelism = 10)
+            └─ TestHTTPTunnel.TunnelCreate / TestHTTPSTunnel.TunnelCreate
+                 → MemoryCacheHttp.CacheUpdated / MemoryCacheHTTPS.CacheUpdate → /proxy/HTTP, /proxy/HTTPS
 ```
 
-Все звенья принимают `CancellationToken token = default` и прокидывают его вниз до `ParallelOptions.CancellationToken` и сетевых вызовов; внутри создаётся связанный `CancellationTokenSource` (`CreateLinkedTokenSource`) с таймаутом на один прокси (10 с для HTTP-метода, 7 с для TCP).
+Все звенья принимают `CancellationToken` и прокидывают его вниз до сетевых вызовов; внутри создаётся связанный `CancellationTokenSource` (`CreateLinkedTokenSource`) с таймаутом на один прокси (7 с для HTTP, 10 с для HTTPS).
 
-Результат проверки — `TesteProxyModelCunt { Tested, Alive, Failed }`; `Program.cs` печатает один из четырёх взаимоисключающих исходов:
-
-| Условие | Сообщение |
-|---|---|
-| `Failed` | Проверка прервана с ошибкой, подробности в логе |
-| `Tested == 0` | Нет SOCKS5-прокси для проверки |
-| `Alive == 0` | Проверено N, рабочих 0 — все прокси мертвы |
-| иначе | Проверка выполнена: проверено N, рабочих M |
-
-От двойного запуска защищает статический флаг `_ischekedd` (захват через `Interlocked.CompareExchange` до `Task.Run`, сброс в `finally`).
+Результат проверки — `TesteProxyModelCunt { Tested, Alive, Failed }`.
 
 ---
 
 ## Как это работает
 
 ```
-                     ┌────────────────────────────┐
-                     │  appsettings.json          │
-                     └─────────────┬──────────────┘
-                                   ▼
-   Timer (каждые 12 ч, старт сразу)
-                   │
-                   ▼
-   Скачивание списков прокси (Git, HTTP-клиенты с Polly)
-                   │
-                   ▼
-   Парсинг:  ip:port строки → HttpParse (SOCKS5)
-             │  t.me/proxy?server=… строки → MtProtoParse
-                   │
-                   ▼
-   Кэш (IMemoryCache): fresh (13 ч) + stale (14 ч)
-                   │
-                   ▼
-   REST API: /proxy/MTPROTO, /proxy/SOCKS5, /proxy/ALL, /proxy/STATS
-                   │
-   Проверка SOCKS5 (/check) → проверенный кэш (13 ч) → /proxy/SOCKS5
+                      ┌────────────────────────────┐
+                      │  appsettings.json          │
+                      └─────────────┬──────────────┘
+                                    ▼
+             Timer (каждые 12 ч, старт сразу)  и  команда /check
+                                    │
+                                    ▼
+       Скачивание списков прокси (HTTP-клиенты с Polly, по одному клиенту на протокол)
+                                    │
+                                    ▼
+   Парсинг строк → HttpParse / HttpsParse / MtpParse / MtProtoParse / ShadowSocksParse
+                                    │
+                                    ▼
+           Кэш (IMemoryCache): fresh (13 ч) + stale (14 ч) + проверенный (13 ч)
+                                    │
+                                    ▼
+   REST API: /proxy/MTPROTO, /proxy/SOCKS5, /proxy/SHADOWSOCKS, /proxy/HTTP, /proxy/HTTPS, /proxy/ALL, /proxy/STATS
+                                    │
+              Проверка (/check) → проверенный кэш (13 ч) → маршруты /proxy/*
 ```
 
 Отдельные подсистемы:
 
 - **Таймер** — обновление прокси с защитой от наложенных запусков (при уже идущем обновлении тик пропускается).
 - **Кэш** — «свежие» и «старые» данные; при падении/недоступности источника прокси сервис продолжает отдавать последние сохранённые.
-- **Проверка SOCKS5** — ручной прогон через `/check`, результат кладётся в отдельный проверенный кэш.
+- **Проверка прокси** — ручной прогон через `/check`, результат кладётся в отдельный проверенный кэш.
 - **Логи** — каждое значимое событие пишется в консоль и в SQLite.
 - **Пинг** — замер задержек до Google и GitHub по команде `/ping`.
 
@@ -330,6 +315,15 @@ Fabric_TcpSocks5_Test.TestFactoryMethod
 | SOCKS5 свежий | Актуальный список SOCKS5-прокси | absolute 13 ч / sliding 13 ч |
 | SOCKS5 stale | «Запасной» список SOCKS5-прокси | absolute 13 ч / sliding 14 ч |
 | SOCKS5 проверенный | Список живых SOCKS5 после `/check` (`CheckedSocks5`) | absolute 13 ч |
+| ShadowSocks свежий | Актуальный список ShadowSocks-прокси | absolute 13 ч / sliding 13 ч |
+| ShadowSocks stale | «Запасной» список ShadowSocks-прокси | absolute 13 ч / sliding 14 ч |
+| ShadowSocks проверенный | Список живых ShadowSocks после `/check` (`ChekedShadow`) | absolute 13 ч |
+| HTTP свежий | Актуальный список HTTP-прокси | absolute 13 ч / sliding 13 ч |
+| HTTP stale | «Запасной» список HTTP-прокси | absolute 13 ч / sliding 14 ч |
+| HTTP проверенный | Список живых HTTP после `/check` (`ChekedHTTP`) | absolute 13 ч |
+| HTTPS свежий | Актуальный список HTTPS-прокси | absolute 13 ч / sliding 13 ч |
+| HTTPS stale | «Запасной» список HTTPS-прокси | absolute 13 ч / sliding 14 ч |
+| HTTPS проверенный | Список живых HTTPS после `/check` (`CheckHTTPS`) | absolute 13 ч |
 
 Срок жизни свежих данных (13 ч) больше периода таймера (12 ч), поэтому контроллер почти всегда отдаёт актуальные данные без «просадки» в stale между обновлениями.
 
@@ -347,7 +341,7 @@ Fabric_TcpSocks5_Test.TestFactoryMethod
 - запуск/завершение скрипта;
 - старт таймера, каждый цикл обновления прокси;
 - количество полученных и отданных прокси;
-- ход и итог проверки SOCKS5;
+- ход и итог проверки прокси;
 - ошибки (с трейсом);
 - отправка писем, очистка логов, пинг.
 
@@ -374,8 +368,15 @@ ProxyTG_HTTP/
 ├── appsettings.json                # Конфигурация
 ├── TestProxy_Settings.json         # Выбранный метод проверки SOCKS5
 ├── Cache/
-│   ├── CheckedSocks5.cs            # Модель проверенного списка (Proxies + CheckedAtUtc)
+│   ├── ChekedHTTP.cs               # Модель проверенного HTTP-списка (Proxies + CheckedAtUtc)
+│   ├── CheckHTTPS.cs               # Модель проверенного HTTPS-списка (Proxies + CheckedAtUtc)
+│   ├── CheckedSocks5.cs            # Модель проверенного SOCKS5-списка (Proxies + CheckedAtUtc)
+│   ├── ChekedMtproto.cs            # Модель проверенного MTProto-списка (Proxies + CheckedAtUtc)
+│   ├── ChekedShadow.cs             # Модель проверенного ShadowSocks-списка (Proxies + CheckedAtUtc)
+│   ├── MemoryCacheHttp.cs          # Кэш HTTP-прокси (fresh + stale + проверенный)
+│   ├── MemoryCacheHTTPS.cs         # Кэш HTTPS-прокси (fresh + stale + проверенный)
 │   ├── MemoryCacheMTProtoList.cs   # Кэш MTProto-прокси (fresh + stale)
+│   ├── MemoryCacheShadowSoscks.cs  # Кэш ShadowSocks-прокси (fresh + stale + проверенный)
 │   └── MemoryCacheSocks5List.cs    # Кэш SOCKS5-прокси (fresh + stale + проверенный)
 ├── Controller/
 │   └── ControllerGetAllProxy.cs    # REST-контроллер /proxy/*
@@ -393,23 +394,43 @@ ProxyTG_HTTP/
 ├── HTTP/
 │   ├── HTTPClientSettings/         # Настройки HTTP-клиентов (Git, Google, Ping)
 │   ├── HttpGet/GetProxys.cs        # Скачивание списков
-│   ├── HttpGetProxys/              # Фабрика и стратегии запросов прокси
+│   ├── HttpGetProxys/              # Фабрика и стратегии запросов прокси (в т.ч. HttpAndHttps)
 │   └── PingRequest/                # Пинг до Git и Google
 ├── MailKit/                        # SMTP-клиенты и фабрика стратегий (Google/Yandex)
 ├── ModelData/                      # Модели (JSON-конфиг, прокси, пинг, логи, статистика)
+│   ├── ParseData/
+│   │   ├── HttpParse.cs            # Модель HTTP-прокси (HostHttp, PortHttp, DateGiveHttp)
+│   │   ├── HttpsParse.cs           # Модель HTTPS-прокси (HostHttp, PortHttp, DateGiveHttp)
+│   │   ├── MtpParse.cs             # Модель SOCKS5-прокси (IP, Port, Version, Date)
+│   │   ├── MtProtoParse.cs         # Модель MTProto-прокси (ServerKey, PortKey, SecretKey…)
+│   │   ├── ShadowSocksParse.cs
+│   │   └── ProxyRecord.cs          # Базовый интерфейс парсинга
+│   ├── UpdateData/
+│   │   ├── ChekedHTTP.cs / CheckHTTPS.cs
+│   │   └── …                       # Модели проверенных списков
+│   └── JsonPtoxyTest/
+│       └── TesteProxyModelCunt.cs  # Результат проверки (Tested, Alive, Failed)
 ├── Parser/
+│   ├── ParseHttpandHttps.cs        # Парсинг HTTP/HTTPS-прокси из TXT-листов
 │   ├── ParseSocks5.cs              # SOCKS5-прокси → HttpParse
-│   └── ParseMTProto.cs             # t.me/proxy?... строки → MtProtoParse
+│   └── ParseMTProto.cs             # t.me/proxy?… строки → MtProtoParse
 ├── ReadedJson/
 │   ├── ReadAndDeserializeJson.cs   # Чтение appsettings.json
 │   └── JsonWriteTcpTests.cs        # Чтение/запись выбранного метода проверки
 ├── SendToMail/
 │   └── SendLogToMail.cs            # Оркестрация: логи → PDF → почта
-└── TestSocks5/                     # Проверка SOCKS5 (HTTP- и TCP-методы)
-    ├── Fabric_TcpSocks5_Test.cs    # Интерфейс фабрики + реализации методов
-    ├── Strategy_TcpSocks5_Test.cs  # Интерфейс стратегии + звенья цепочки
-    ├── CheckWebProxy/              # HTTP-метод (TestCicle, TestSocks5WebProxy, TestSocksClient)
-    └── CheckTcpTunnel/             # TCP-метод (TestCircle, TestSocs5TunnelCreate)
+├── TestHTTP/                       # Проверка HTTP-прокси (CONNECT-туннель)
+│   ├── TestHTTPTunnel.cs           # Один прокси: TCP connect → CONNECT → чтение статуса 2xx
+│   └── TestCircleHTTP.cs           # Массовая проверка списка (Parallel.ForEachAsync)
+├── TestHTTPS/                      # Проверка HTTPS-прокси (TLS → CONNECT-туннель)
+│   ├── TestHTTPSTunnel.cs          # Один прокси: SslStream → CONNECT → чтение статуса 2xx
+│   └── TestCIrcleHTTPS.cs          # Массовая проверка списка (Parallel.ForEachAsync)
+├── TestMtproto/                    # Проверка MTProto-прокси
+└── TestSocks5/                     # Проверка SOCKS5-прокси (HTTP- и TCP-методы)
+    ├── Fabric_TcpSocks5_Test.cs
+    ├── Strategy_TcpSocks5_Test.cs
+    ├── CheckWebProxy/              # HTTP-метод
+    └── CheckTcpTunnel/             # TCP-метод
 ```
 
 ---
@@ -422,7 +443,8 @@ ProxyTG_HTTP/
 | `SimpleW` | Лёгкий HTTP-сервер |
 | `MailKit` / `MimeKit` | Отправка почты по SMTP |
 | `Microsoft.Extensions.*` | Logging, DI, HttpClient, MemoryCache |
-| `Polly` | Retry / circuit breaker для HTTP-клиентов |
+| `Polly` | Retry для HTTP-клиентов |
+| `Microsoft.Extensions.Http.Resilience` | Таймауты и повторы HTTP |
 | `System.Data.SQLite` (`System.Data.SQLite.Core`) | База данных |
 | `TerraPDF` | Генерация PDF-отчётов |
 
