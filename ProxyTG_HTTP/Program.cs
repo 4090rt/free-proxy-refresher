@@ -146,6 +146,11 @@ class Program
         servise.AddScoped<TestCIrcleHTTPS>();
         servise.AddScoped<TestHTTPSTunnel>();
         servise.AddScoped<TestHTTPTunnel>();
+        servise.AddScoped<ProxyTG_HTTP.HTTP.HttpGetProxys.HttpandHttps.HttpRequest>();
+        servise.AddScoped<HttpsRequest>();
+        servise.AddScoped<MemoryCacheHttp>();
+        servise.AddScoped<MemoryCacheHTTPS>();
+
 
         var serviceProvider = servise.BuildServiceProvider();
 
@@ -203,11 +208,31 @@ class Program
 
                     else if (input.ToLower() == "/check")
                     {
-                        await StartProxyTestMethod(serviceProvider, cts).ConfigureAwait(false);
-                        await StartMTProxyTestMethod(serviceProvider, cts).ConfigureAwait(false);
-                        await StartShadowTestMethod(serviceProvider, cts).ConfigureAwait(false);
-                        await StartHTTPTestMethod(serviceProvider, cts).ConfigureAwait(false);
-                        await StartHTTPSTestMethod(serviceProvider, cts).ConfigureAwait(false);
+                        var bathcheck = CancellationTokenSource.CreateLinkedTokenSource(cts.Token);
+                        Volatile.Write(ref _cts, bathcheck);
+
+                        var tasks = new[]
+                        {
+                            StartProxyTestMethod(serviceProvider, bathcheck),
+                            StartMTProxyTestMethod(serviceProvider, bathcheck),
+                            StartShadowTestMethod(serviceProvider, bathcheck),
+                            StartHTTPTestMethod(serviceProvider, bathcheck),
+                            StartHTTPSTestMethod(serviceProvider, bathcheck),
+                        };
+
+                        try
+                        {
+                            await Task.WhenAll(tasks).ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError("Не удалось дождаться завершения всех проверок" + ex.Message);
+                            await serviceNewLog.SaveLog("Не удалось дождаться завершения всех проверок:" + ex.Message, DateTime.UtcNow.ToString());
+                        }
+                        finally
+                        {
+                            Volatile.Write(ref _cts, null);
+                        }
                     }
                     else if (input.ToLower() == "/ping")
                     {
@@ -402,7 +427,7 @@ class Program
             var tester = serviceProvider.GetRequiredService<TestCircleHTTP>();
             var logsave = serviceProvider.GetRequiredService<LogSave>();
 
-            if (Interlocked.CompareExchange(ref _ischekedHttp, 0, 1) == 1)
+            if (Interlocked.CompareExchange(ref _ischekedHttp, 1, 0) == 1)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("  Проверка уже идёт, дождитесь завершения");
@@ -414,13 +439,16 @@ class Program
 
             try
             {
-                var result = await tester.TestCircle(cancellationTokenSource.Token).ConfigureAwait(false);
-
-                if (result.Alive == 0 || result.Tested == 0)
+                _ = Task.Run(async () =>
                 {
-                    _logger.LogError("Ошибка при получении результата проверки HTTP");
-                }
-                await PrintCheckResult(result, logsave, "HTTP").ConfigureAwait(false);
+                    var result = await tester.TestCircle(cancellationTokenSource.Token).ConfigureAwait(false);
+
+                    if (result.Alive == 0 || result.Tested == 0)
+                    {
+                        _logger.LogError("Ошибка при получении результата проверки HTTP");
+                    }
+                    await PrintCheckResult(result, logsave, "HTTP").ConfigureAwait(false);
+                });
             }
             catch (Exception ex)
             {
@@ -428,8 +456,7 @@ class Program
             }
             finally
             {
-                Volatile.Write(ref _cts, null);
-                Interlocked.Exchange(ref _ischekedShadowSocks, 0);
+                Interlocked.Exchange(ref _ischekedHttp, 0);
             }
         }
         catch (OperationCanceledException ex) when (cancellationTokenSource.Token.IsCancellationRequested)
@@ -453,7 +480,7 @@ class Program
             var tester = serviceProvider.GetRequiredService<TestCIrcleHTTPS>();
             var logsave = serviceProvider.GetRequiredService<LogSave>();
 
-            if (Interlocked.CompareExchange(ref _ischekedHttps, 0,1) == 1)
+            if (Interlocked.CompareExchange(ref _ischekedHttps, 1,0) == 1)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("  Проверка уже идёт, дождитесь завершения");
@@ -481,8 +508,7 @@ class Program
                 }
                 finally
                 {
-                    Volatile.Write(ref _cts, null);
-                    Interlocked.Exchange(ref _ischekedShadowSocks, 0);
+                    Interlocked.Exchange(ref _ischekedHttps, 0);
                 }
             });
         }
@@ -534,7 +560,6 @@ class Program
                 }
                 finally
                 {
-                    Volatile.Write(ref _cts, null);
                     Interlocked.Exchange(ref _ischekedShadowSocks, 0);
                 }
             });
@@ -589,7 +614,6 @@ class Program
                 }
                 finally
                 {
-                    Volatile.Write(ref _cts, null);
                     Interlocked.Exchange(ref _ischekedMtproto, 0);
                 }
             });
@@ -644,7 +668,6 @@ class Program
                 }
                 finally
                 {
-                    Volatile.Write(ref _cts, null);
                     Interlocked.CompareExchange(ref _ischekedShadowSocks, 0,1);
                 }
             });
@@ -812,6 +835,8 @@ class Program
         var cacheShadow = serviceProvider.GetRequiredService<MemoryCacheShadowSoscks>();
         var parser = serviceProvider.GetRequiredService<ParseShadowSocsk>();
         var getproxyhttp = serviceProvider.GetRequiredService<FabriClassHttp>();
+        var cacheHTTP = serviceProvider.GetRequiredService<MemoryCacheHttp>();
+        var cacheHTTPS = serviceProvider.GetRequiredService<MemoryCacheHTTPS>();
 
         try
         {
@@ -834,7 +859,6 @@ class Program
 
                     var httpstrategy = getproxyhttp.FabricMethod("HTTP");
                     var httpsstrategy = getproxyhttp.FabricMethod("HTTPS");
-;
                     Task<List<ProxyData>> mtProtoTask = mtProtoStrategy.HttpClients(cts.Token);
                     Task<List<ProxyData>> socks5Task = socks5Strategy.HttpClients(cts.Token);
                     Task<IReadOnlyList<ShadowSocksParseSS>> shadowSocksParses = getShadow.HttpGet(cts.Token);
@@ -857,7 +881,9 @@ class Program
                     { ServerKey = p.Server, PortKey = p.Port, SecretKey = p.Secret ?? string.Empty, Version = p.Version, Date = p.Date }).ToList();
                     IReadOnlyList<ShadowSocksParse> shadowSocksParses1 = await parser.ParsedMetod(shadowData, cts.Token).ConfigureAwait(false);
 
-                    //Кэш для HTTP
+
+                    cacheHTTP.Cache(httpData.Cast<HttpParse>().ToList().AsReadOnly());
+                    cacheHTTPS.Cache(httpsData.Cast<HttpsParse>().ToList().AsReadOnly());
                     cacheShadow.Cached(shadowSocksParses1);
                     cacheMtpRoto.Cache(MTProtoParses.AsReadOnly());
                     cacheSocks5.Cache(socks5Parses.AsReadOnly());

@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +15,7 @@ namespace ProxyTG_HTTP.TestSocks5.CheckTcpTunnel
     public class TestSocs5TunnelCreate
     {
         private readonly ILogger<TestSocs5TunnelCreate> _logger;
+        
         private string _UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
         public TestSocs5TunnelCreate(ILogger<TestSocs5TunnelCreate> logger)
         { 
@@ -23,7 +24,7 @@ namespace ProxyTG_HTTP.TestSocks5.CheckTcpTunnel
 
         private static readonly ArrayPool<byte> pool = ArrayPool<byte>.Shared;
 
-public async Task<bool> Test(HttpParse httpParse, CancellationToken cancellationToken, string targetHost = "httpbin.org", int targetPort = 80)
+        public async Task<bool> Test(MtpParse httpParse, CancellationToken cancellationToken, string targetHost = "httpbin.org", int targetPort = 80)
         {
             byte[] buffer = pool.Rent(15);         // заголовок ответа (4 байта)
             byte[] bufferFinally = pool.Rent(258); // хвост ответа: 1 (длина) + 255 (домен) + 2 (порт)

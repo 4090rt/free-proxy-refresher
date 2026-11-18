@@ -32,7 +32,7 @@ namespace ProxyTG_HTTP.Cache
         {
             try
             {
-                if (httpParses == null) return;
+                if (httpParses == null || httpParses.Count == 0) return;
 
                 var options = new MemoryCacheEntryOptions()
                     .SetAbsoluteExpiration(TimeSpan.FromHours(13))
@@ -45,7 +45,7 @@ namespace ProxyTG_HTTP.Cache
                 _memorycache.Set(cache_key, httpParses, options);
                 _memorycache.Set(staleCachekey, httpParses, staleoptions);
 
-                WarningAndInfoLog.LogInfo($"✅ MTProto-кэш обновлён: {httpParses.Count} прокси", _logger);
+                WarningAndInfoLog.LogInfo($"✅ HTTP-кэш обновлён: {httpParses.Count} прокси", _logger);
             }
             catch (Exception ex)
             {
@@ -57,9 +57,8 @@ namespace ProxyTG_HTTP.Cache
         {
             try
             {
-                if (_memorycache.TryGetValue(cache_key, out IReadOnlyList<HttpParse>? fresh) && fresh != null)
+                if (_memorycache.TryGetValue(cache_key, out IReadOnlyList<HttpParse>? fresh) && fresh != null) 
                 {
-                    WarningAndInfoLog.LogWarning($"Fresh HTTP пуст, отдаю stale: {fresh.Count} прокси", _logger);
                     return fresh;
                 }
 
@@ -94,7 +93,7 @@ namespace ProxyTG_HTTP.Cache
                     CheckedAtUtc = DateTime.UtcNow
                 };
 
-                _memorycache.Set(cache_keyUpdate, httpParses, options);
+                _memorycache.Set(cache_keyUpdate, updateted, options);
 
                 WarningAndInfoLog.LogInfo($"✅ HTTP-кэш обновлён: {httpParses.Count} прокси", _logger);
             }

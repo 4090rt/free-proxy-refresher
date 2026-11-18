@@ -61,7 +61,11 @@ namespace ProxyTG_HTTP.TestHTTPS
 
                 string head = Encoding.ASCII.GetString(buffer, 0, read);
 
-                return head.StartsWith("HTTP/", StringComparison.Ordinal) && head.Contains("200");
+                var statusLine = head.Split("\r\n", 2)[0];
+                var parts = statusLine.Split(' ');
+                return head.StartsWith("HTTP/", StringComparison.Ordinal)
+                       && parts.Length >= 2 && int.TryParse(parts[1], out int code)
+                       && code is >= 200 and < 300;
             }
             catch (AuthenticationException ex)
             {

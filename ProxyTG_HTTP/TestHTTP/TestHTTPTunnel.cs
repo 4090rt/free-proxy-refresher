@@ -22,7 +22,6 @@ namespace ProxyTG_HTTP.TestHTTP
         public async Task<bool> TunnelCreate(HttpParse httpParse, CancellationToken cancellationToken, string targetHost = "httpbin.org", int targetPort = 80)
         {
             byte[] buffer = arrayPool.Rent(256);
-            TcpClient? tcpClient = null;
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             cts.CancelAfter(TimeSpan.FromSeconds(7));
 
@@ -33,15 +32,15 @@ namespace ProxyTG_HTTP.TestHTTP
                     proxyPort < 1 || proxyPort > 65535)
                     return false;
 
-                tcpClient = new TcpClient();
+                using var tcpClient = new TcpClient();
 
-                await tcpClient.ConnectAsync(httpParse.Host, int.Parse(httpParse.Port), cts.Token);
+                await tcpClient.ConnectAsync(httpParse.Host, proxyPort, cts.Token);
 
                 Stream stream = tcpClient.GetStream();
 
-                byte[] packet = CreatePacket(httpParse.Host, httpParse.Port);
+                byte[] packet = CreatePacket(targetHost, targetPort.ToString());
 
-                await stream.WriteAsync(packet).ConfigureAwait(false);
+                await stream.WriteAsync(packet, cts.Token).ConfigureAwait(false);
 
                 int readed = await stream.ReadAsync(buffer.AsMemory(0, 256), cts.Token).ConfigureAwait(false);
 
@@ -54,12 +53,10 @@ namespace ProxyTG_HTTP.TestHTTP
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                tcpClient?.Dispose();
                 throw;
             }
             catch (Exception)
             {
-                tcpClient?.Dispose();
                 return false;
             }
             finally

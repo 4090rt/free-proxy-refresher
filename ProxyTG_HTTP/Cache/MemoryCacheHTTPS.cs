@@ -68,7 +68,7 @@ namespace ProxyTG_HTTP.Cache
                     WarningAndInfoLog.LogWarning($"Stale HTTPS пуст, отдаю stale: {stale.Count} прокси", _logger);
                     return stale;
                 }
-                WarningAndInfoLog.LogWarning("🆘 Нет ни fresh, ни stale Http данных", _logger);
+                WarningAndInfoLog.LogWarning("🆘 Нет ни fresh, ни stale HTTPS данных", _logger);
                 return new List<HttpsParse>().AsReadOnly();
             }
             catch (Exception ex)

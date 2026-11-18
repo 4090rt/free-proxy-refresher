@@ -57,7 +57,8 @@ namespace ProxyTG_HTTP.HTTP.HttpGetProxys.HttpandHttps
             return type_client.ToLower() switch
             {
                 "http" => new CreateHttp(_createHttp),
-                "https" => new CreateHttps(_createHttps)
+                "https" => new CreateHttps(_createHttps),
+                _ => throw new InvalidOperationException($"Неизвестный тип клиента: {type_client}")
             };
         }
     }

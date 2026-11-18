@@ -47,7 +47,6 @@ namespace ProxyTG_HTTP.TestHTTPS
                 },
                 async (proxy, ctsl) =>
                 {
-                    testeProxyModelCunts.Alive = httpsParses.Count();
 
                     Interlocked.Increment(ref parsedproxy);
 
@@ -57,10 +56,11 @@ namespace ProxyTG_HTTP.TestHTTPS
                     {
                         httpsParsesBag.Add(proxy);
                     }
-                });
+                }); 
+                testeProxyModelCunts.Alive = httpsParses.Count();
                 _memoryCacheHttps.CacheUpdate(httpsParsesBag.ToList());
-                testeProxyModelCunts.Tested = parsedproxy;
-                _logger.LogInformation("Proxy testing complete. Tested: {Total}, Working: {Working}", httpsParses.Count);
+                testeProxyModelCunts.Tested = httpsParsesBag.Count();
+                _logger.LogInformation("Proxy testing complete. Tested: {Total}, Working: {Working}", httpsParses.Count, httpsParsesBag.Count());
                 testeProxyModelCunts.Failed = false;
                 return testeProxyModelCunts;
             }

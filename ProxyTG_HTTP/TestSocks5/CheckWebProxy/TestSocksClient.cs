@@ -17,7 +17,7 @@ namespace ProxyTG_HTTP.TestSocks5.CheckWebProxy
             _logger = logger;
         }
 
-        public HttpClient TestClient(HttpParse p)
+        public HttpClient TestClient(MtpParse p)
         {
             try
             {

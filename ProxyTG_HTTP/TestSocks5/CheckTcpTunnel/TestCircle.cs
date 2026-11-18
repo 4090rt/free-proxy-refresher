@@ -34,15 +34,15 @@ namespace ProxyTG_HTTP.TestSocks5.CheckTcpTunnel
             int numberproxy = 0;
             try
             {
-                IReadOnlyList<HttpParse> listProxy = _memoryCacheSocks5List.Get();
+                IReadOnlyList<MtpParse> listProxy = _memoryCacheSocks5List.Get();
                 TesteProxyModelCunt testeProxyModelCunt = new TesteProxyModelCunt();
-                ConcurrentBag<HttpParse> lsitProxyTested = new ConcurrentBag<HttpParse>();
+                ConcurrentBag<MtpParse> lsitProxyTested = new ConcurrentBag<MtpParse>();
 
                 if (listProxy.Count != 0)
                 {
                     testeProxyModelCunt.Tested = listProxy.Count;
 
-                    await Parallel.ForEachAsync<HttpParse>(listProxy,
+                    await Parallel.ForEachAsync<MtpParse>(listProxy,
                         new ParallelOptions
                         {
                             MaxDegreeOfParallelism = 10,

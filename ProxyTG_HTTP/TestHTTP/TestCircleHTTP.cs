@@ -49,8 +49,6 @@ namespace ProxyTG_HTTP.TestHTTP
                 },
                 async (httpproxy, ctsl) =>
                 {
-                    testeProxyModelCunt.Tested = httpParse.Count;
-
                     Interlocked.Increment(ref parsedproxy);
 
                     bool result = await _testhttpTunnel.TunnelCreate(httpproxy, ctsl).ConfigureAwait(false);
@@ -64,7 +62,8 @@ namespace ProxyTG_HTTP.TestHTTP
                         httpParses.Add(httpproxy);
                     }
                 });
-                testeProxyModelCunt.Alive = parsedproxy;
+                testeProxyModelCunt.Tested = httpParse.Count;
+                testeProxyModelCunt.Alive = httpParses.Count();
                 testeProxyModelCunt.Failed = false;
                 _logger.LogInformation("Proxy testing complete. Tested: {Total}, Working: {Working}",
                 httpParse.Count, httpParses.Count);

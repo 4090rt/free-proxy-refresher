@@ -34,14 +34,14 @@ namespace ProxyTG_HTTP.TestSocks5.CheckWebProxy
             try
             {
                 TesteProxyModelCunt testeProxyModelCunt = new TesteProxyModelCunt();
-                IReadOnlyList<HttpParse> listProxy = _memoryCacheSocks5List.Get();
-                ConcurrentBag<HttpParse> lsitProxyTested = new ConcurrentBag<HttpParse>();
+                IReadOnlyList<MtpParse> listProxy = _memoryCacheSocks5List.Get();
+                ConcurrentBag<MtpParse> lsitProxyTested = new ConcurrentBag<MtpParse>();
 
                 testeProxyModelCunt.Tested = listProxy.Count;
 
                 if (listProxy.Count != 0)
                 {
-                    await Parallel.ForEachAsync<HttpParse>(listProxy,
+                    await Parallel.ForEachAsync<MtpParse>(listProxy,
                        new ParallelOptions
                        {
                            MaxDegreeOfParallelism = 10,
@@ -67,8 +67,7 @@ namespace ProxyTG_HTTP.TestSocks5.CheckWebProxy
                     testeProxyModelCunt.Alive = lsitProxyTested.Count;
                     testeProxyModelCunt.Failed = false;
 
-                    _logger.LogInformation("Proxy testing complete. Tested: {Total}, Working: {Working}",
-                     listProxy.Count, lsitProxyTested.Count);
+                    _logger.LogInformation($"Proxy testing complete. Tested: {listProxy.Count}, Working: {lsitProxyTested.Count}");
 
                     return testeProxyModelCunt;
                 }

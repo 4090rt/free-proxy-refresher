@@ -25,7 +25,7 @@ namespace ProxyTG_HTTP.TestSocks5.CheckWebProxy
             _testUrl = config.Logging.TestProxyUrl.Url;
         }
 
-        public async Task<bool> TestProxy(HttpParse httpParse, CancellationToken cancellationToken)
+        public async Task<bool> TestProxy(MtpParse httpParse, CancellationToken cancellationToken)
         {
             try
             {

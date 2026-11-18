@@ -68,7 +68,6 @@ namespace ProxyTG_HTTP.TestMtproto
                 testeProxyModelCunt.Alive = mtProtoParseBag.Count;
                 testeProxyModelCunt.Failed = false;
                 _memoryCacheMTProtoList.CacheTested(mtProtoParseBag.ToList());
-
                 _logger.LogInformation("Proxy testing complete. Tested: {Total}, Working: {Working}",
                     mtProtoParses.Count, mtProtoParseBag.Count);
 
